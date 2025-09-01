@@ -1,0 +1,33 @@
+{
+  "name": "harvesting-oparl-scraper-service",
+  "version": "0.0.0",
+  "description": "Service that scrapes an OParl API",
+  "main": "app.ts",
+  "scripts": {
+    "lint:js": "eslint . --cache --ext .ts",
+    "lint:js:fix": "eslint . --cache --ext .ts --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lblod/harvesting-oparl-scraper-service.git"
+  },
+  "keywords": [
+    "lblod",
+    "oparl"
+  ],
+  "author": "Brecht Van de Vyvere",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lblod/harvesting-oparl-scraper-service/issues"
+  },
+  "homepage": "https://github.com/lblod/harvesting-oparl-scraper-service#readme",
+  "devDependencies": {
+    "@types/node": "^20.12.10",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "eslint": "^8.23.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0"
+  }
+}
