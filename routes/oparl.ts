@@ -6,13 +6,13 @@ import { rewriteLinkWithProxy, fetchJson } from '../lib/utils';
 const router = express.Router();
 
 function enrichData(data, req: Request, fullUrl: string) {
-  let dataBlock: any = [];
+  let dataBlock = [];
   if (data['data']) {
     dataBlock = data['data'];
   } else {
     dataBlock = [data];
   }
-  let linksBlock: any = {
+  let linksBlock = {
     id: fullUrl,
     type: 'Node',
   };

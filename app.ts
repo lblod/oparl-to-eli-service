@@ -1,9 +1,9 @@
-import { app, query } from 'mu';
+import { app } from 'mu';
 import { ErrorRequestHandler } from 'express';
 import Router from 'express-promise-router';
 import bodyParser from 'body-parser';
 import oparlRoutes from './routes/oparl';
-import { OPARL_JSON_LD_CONTEXT } from "./constants";
+import { OPARL_JSON_LD_CONTEXT } from './constants';
 
 const requiredEnv = ['OPARL_ENDPOINT'];
 
@@ -37,8 +37,8 @@ app.get('/oparl', (req, res) => {
   res.redirect('/oparl/System');
 });
 
-app.get("/context.jsonld", (req, res) => {
-  res.type("application/ld+json");
+app.get('/context.jsonld', (req, res) => {
+  res.type('application/ld+json');
   res.json(OPARL_JSON_LD_CONTEXT);
 });
 
