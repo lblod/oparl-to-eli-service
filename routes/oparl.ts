@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 
 import { OPARL_ENDPOINT } from '../config';
+<<<<<<< HEAD
 import { rewriteLinkWithProxy, fetchJson } from '../lib/utils';
 
 const router = express.Router();
@@ -92,8 +93,29 @@ router.get(
       } else {
         res.status(500).json({ error: 'Unknown error' });
       }
+=======
+import { enrichOparlData, getOparlData } from '../lib/utils';
+
+const router = express.Router();
+
+router.get('/*', async (req: Request, res: Response) => {
+  console.log('Received request:', req.params);
+  try {
+    const oparlUrl = `${OPARL_ENDPOINT}${req.path.substring(req.path.indexOf('/oparl') + 6)}`;
+    let oparlData = await getOparlData(oparlUrl);
+    oparlData = enrichOparlData(oparlData, req);
+
+    res.setHeader('Content-Type', 'application/ld+json');
+    res.json(oparlData);
+  } catch (err: unknown) {
+    console.error(err);
+    if (err instanceof Error) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.status(500).json({ error: 'Unknown error' });
+>>>>>>> 8570af0 (Separate route for oparl and eli)
     }
-  },
-);
+  }
+});
 
 export default router;

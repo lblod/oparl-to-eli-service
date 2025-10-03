@@ -1,8 +1,9 @@
 import { app } from 'mu';
 import { ErrorRequestHandler } from 'express';
 import Router from 'express-promise-router';
-import bodyParser from 'body-parser';
+import bodyParser, { json } from 'body-parser';
 import oparlRoutes from './routes/oparl';
+import eliRoutes from './routes/eli';
 import { OPARL_JSON_LD_CONTEXT } from './constants';
 
 const requiredEnv = ['OPARL_ENDPOINT'];
@@ -34,7 +35,7 @@ app.get('/status', function (req, res) {
 });
 
 app.get('/oparl', (req, res) => {
-  res.redirect('/oparl/System');
+  res.redirect('/oparl/oparl/System');
 });
 
 app.get('/context.jsonld', (req, res) => {
@@ -43,6 +44,16 @@ app.get('/context.jsonld', (req, res) => {
 });
 
 app.use('/oparl', oparlRoutes);
+
+app.use('/eli', eliRoutes);
+app.get('/eli', (req, res) => {
+  res.redirect('/eli/oparl/System');
+});
+
+app.get('/context.json', (req, res) => {
+  res.set('Content-Type', 'application/ld+json');
+  res.json(OPARL_JSON_LD_CONTEXT);
+});
 
 const errorHandler: ErrorRequestHandler = function (err, _req, res, _next) {
   // custom error handler to have a default 500 error code instead of 400 as in the template
