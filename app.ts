@@ -3,6 +3,7 @@ import { ErrorRequestHandler } from 'express';
 import Router from 'express-promise-router';
 import bodyParser from 'body-parser';
 import oparlRoutes from './routes/oparl';
+import { OPARL_JSON_LD_CONTEXT } from "./constants";
 
 const requiredEnv = ['OPARL_ENDPOINT'];
 
@@ -35,6 +36,12 @@ app.get('/status', function (req, res) {
 app.get('/oparl', (req, res) => {
   res.redirect('/oparl/System');
 });
+
+app.get("/context.jsonld", (req, res) => {
+  res.type("application/ld+json");
+  res.json(OPARL_JSON_LD_CONTEXT);
+});
+
 app.use('/oparl', oparlRoutes);
 
 const errorHandler: ErrorRequestHandler = function (err, _req, res, _next) {
