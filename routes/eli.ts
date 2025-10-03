@@ -1,14 +1,13 @@
 import express, { Request, Response } from 'express';
-
-import { OPARL_ENDPOINT } from '../config';
 import { enrichOparlData, getOparlData } from '../lib/utils';
+import { OPARL_ENDPOINT } from '../config';
 
 const router = express.Router();
 
 router.get('/*', async (req: Request, res: Response) => {
   console.log('Received request:', req.params);
   try {
-    const oparlUrl = `${OPARL_ENDPOINT}${req.path.substring(req.path.indexOf('/oparl') + 6)}`;
+    const oparlUrl = `${OPARL_ENDPOINT}${req.path.substring(req.path.indexOf('/eli') + 7)}`;
     let oparlData = await getOparlData(oparlUrl);
     oparlData = enrichOparlData(oparlData, req);
 
