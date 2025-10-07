@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
-import { enrichOparlData, getOparlData } from '../lib/utils';
+import { enrichOparlDataToJsonLd, getOparlData } from '../lib/utils';
 import { OPARL_ENDPOINT } from '../config';
+import { convertOparlToEli } from '../lib/convert';
 
 const router = express.Router();
 
@@ -9,10 +10,11 @@ router.get('/*', async (req: Request, res: Response) => {
   try {
     const oparlUrl = `${OPARL_ENDPOINT}${req.path.substring(req.path.indexOf('/eli') + 7)}`;
     let oparlData = await getOparlData(oparlUrl);
-    oparlData = enrichOparlData(oparlData, req);
+    oparlData = enrichOparlDataToJsonLd(oparlData, req);
+    const convertedOparlData = await convertOparlToEli(oparlData);
 
-    res.setHeader('Content-Type', 'application/ld+json');
-    res.json(oparlData);
+    res.setHeader('Content-Type', 'text/turtle');
+    res.json(convertedOparlData);
   } catch (err: unknown) {
     console.error(err);
     if (err instanceof Error) {

@@ -1,4 +1,6 @@
 import { Request } from 'express';
+import { EMBED_JSONLD_CONTEXT } from '../config';
+import { OPARL_JSON_LD_CONTEXT } from '../constants';
 
 export function rewriteLinkWithProxy(originalUrl: URL, req: any): URL {
   // replace host
@@ -28,7 +30,7 @@ export async function getOparlData(oparlUrl: string) {
   return await response.json();
 }
 
-export function enrichOparlData(oparlData: any, req: Request) {
+export function enrichOparlDataToJsonLd(oparlData: any, req: Request) {
   const currentUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
 
   let dataBlock = [];
@@ -104,7 +106,9 @@ export function enrichOparlData(oparlData: any, req: Request) {
   }
 
   // Enrich original response with context and overwrite links
-  oparlData['@context'] = `${req.protocol}://${req.get('host')}/context.json`;
+  if (!EMBED_JSONLD_CONTEXT) oparlData['@context'] = `${req.protocol}://${req.get('host')}/context.json`;
+  else oparlData['@context'] = OPARL_JSON_LD_CONTEXT['@context'];
+
   oparlData['links'] = linksBlock;
 
   return oparlData;
