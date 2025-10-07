@@ -11,16 +11,20 @@ export function rewriteLinkWithProxy(originalUrl: URL, req: any): URL {
   const newUrl = new URL(originalUrl.toString());
   newUrl.protocol = protocol;
   newUrl.host = host;
-  console.log("original url: " + originalUrl.toString());
-  console.log("original pathname: " + originalUrl.pathname);
+  console.log('original url: ' + originalUrl.toString());
+  console.log('original pathname: ' + originalUrl.pathname);
   newUrl.pathname = `/${firstSegment}${originalUrl.pathname}`;
   try {
-    console.log("new url: " + newUrl.toString());
+    console.log('new url: ' + newUrl.toString());
     return newUrl;
   } catch (error) {
     console.error('Invalid URL:', originalUrl);
     return originalUrl; // Fallback to the original URL if parsing fails
   }
+}
+
+export function removeVersionFromOparlSchemaUri(text: string): string {
+  return text.replaceAll(/(schema\.oparl\.org)\/\d+\.\d+(?=\/|$)/g, '$1');
 }
 
 export async function getOparlData(oparlUrl: string) {
@@ -106,10 +110,15 @@ export function enrichOparlDataToJsonLd(oparlData: any, req: Request) {
   }
 
   // Enrich original response with context and overwrite links
-  if (!EMBED_JSONLD_CONTEXT) oparlData['@context'] = `${req.protocol}://${req.get('host')}/context.json`;
+  if (!EMBED_JSONLD_CONTEXT)
+    oparlData['@context'] = `${req.protocol}://${req.get('host')}/context.json`;
   else oparlData['@context'] = OPARL_JSON_LD_CONTEXT['@context'];
 
   oparlData['links'] = linksBlock;
 
-  return oparlData;
+  // Remove version from schema URIs
+  const oparlDataWithoutVersion = JSON.parse(
+    removeVersionFromOparlSchemaUri(JSON.stringify(oparlData))
+  );
+  return oparlDataWithoutVersion;
 }

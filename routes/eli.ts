@@ -11,10 +11,15 @@ router.get('/*', async (req: Request, res: Response) => {
     const oparlUrl = `${OPARL_ENDPOINT}${req.path.substring(req.path.indexOf('/eli') + 7)}`;
     let oparlData = await getOparlData(oparlUrl);
     oparlData = enrichOparlDataToJsonLd(oparlData, req);
-    const convertedOparlData = await convertOparlToEli(oparlData);
+    const convertedOparlData = await convertOparlToEli(
+      oparlData,
+      (req.headers.accept && req.headers.accept.includes('json')
+        ? 'application/ld+json'
+        : 'text/turtle')
+    );
 
     res.setHeader('Content-Type', 'text/turtle');
-    res.json(convertedOparlData);
+    res.send(convertedOparlData);
   } catch (err: unknown) {
     console.error(err);
     if (err instanceof Error) {
