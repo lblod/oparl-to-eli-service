@@ -1,32 +1,53 @@
-import { Request } from 'express';
-import { EMBED_JSONLD_CONTEXT } from '../config';
-import { OPARL_JSON_LD_CONTEXT } from '../constants';
+import { convertOparlToEli } from './convert';
+import { Parser, Store } from 'n3';
+import { enrichOparlDataToJsonLd } from './enrich';
 
-export function rewriteLinkWithProxy(originalUrl: URL, req: any): URL {
+/**
+ * Changes the protocol and host of an URL with the protocol and host from the provided proxy URL. Also, adds the first segment of the path of the proxy URL.
+ * For example, https://ris.freiburg.de/oparl/System becomes http://localhost:8888/eli/oparl/System
+ * @param {string} originalUrl - URL that needs to be rewritten.
+ * @param {string} proxyUrl - URL of the proxy
+ * @returns {URL} URL object of the rewritten URL
+ */
+export function rewriteLinkWithProxy(originalUrl: string, proxyUrl: string): URL {
+  const originalUrlObj = new URL(originalUrl);
+  const proxyUrlObj = new URL(proxyUrl);
+
   // replace host
-  const protocol = req.protocol;
-  const host = req.get('host');
-  const firstSegment = req.originalUrl.split('/')[1]; // 'eli' or 'oparl'
+  const protocol = proxyUrlObj.protocol;
+  const host = proxyUrlObj.host;
+  let firstSegment = proxyUrlObj.toString().split('/')[1]; // 'eli' or 'oparl' or '' in harvesting
+  console.log('first segment: ' + firstSegment);
+  if (firstSegment != '') firstSegment = `/${firstSegment}`;
 
   const newUrl = new URL(originalUrl.toString());
   newUrl.protocol = protocol;
   newUrl.host = host;
-  console.log('original url: ' + originalUrl.toString());
-  console.log('original pathname: ' + originalUrl.pathname);
-  newUrl.pathname = `/${firstSegment}${originalUrl.pathname}`;
+  newUrl.pathname = `${firstSegment}${originalUrlObj.pathname}`;
   try {
     console.log('new url: ' + newUrl.toString());
     return newUrl;
   } catch (error) {
     console.error('Invalid URL:', originalUrl);
-    return originalUrl; // Fallback to the original URL if parsing fails
+    return originalUrlObj; // Fallback to the original URL if parsing fails
   }
 }
 
-export function removeVersionFromOparlSchemaUri(text: string): string {
-  return text.replaceAll(/(schema\.oparl\.org)\/\d+\.\d+(?=\/|$)/g, '$1');
+/**
+ * Removes the schema version from an Oparl schema URL string
+ * For example, https://schema.oparl.org/1.0/System becomes https://schema.oparl.org/System
+ * @param {string} url - Oparl schema URL 
+ * @returns {string} Oparl schema URL without version
+ */
+export function removeVersionFromOparlSchemaUri(url: string): string {
+  return url.replaceAll(/(schema\.oparl\.org)\/\d+\.\d+(?=\/|$)/g, '$1');
 }
 
+/**
+ * Fetch with logging and returning JSON
+ * @param {string} oparlUrl - Oparl API URL 
+ * @returns {object} JSON response
+ */
 export async function getOparlData(oparlUrl: string) {
   const response = await fetch(oparlUrl);
   console.log('Sent Oparl request:', oparlUrl);
@@ -34,91 +55,72 @@ export async function getOparlData(oparlUrl: string) {
   return await response.json();
 }
 
-export function enrichOparlDataToJsonLd(oparlData: any, req: Request) {
-  const currentUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+/**
+ * Wrapper to fetch Oparl API JSON, convert to JSON-LD with linkToPublications, and convert to ELI
+ * @param {string} oparlUrl - Oparl API URL
+ * @param {string} format - format of the ELI data, see N3 serializations
+ * @param {string} proxyUrl - URL string used to rewrite OParl URL
+ * @returns {object} JSON response
+ */
+export async function getEliData(
+  oparlUrl: string,
+  format: string,
+  proxyUrl: string,
+) {
+  let oparlData = await getOparlData(oparlUrl);
+  oparlData = enrichOparlDataToJsonLd(oparlData, proxyUrl);
+  return await convertOparlToEli(oparlData, format);
+}
 
-  let dataBlock = [];
-  if (oparlData['data']) {
-    dataBlock = oparlData['data'];
-  } else {
-    dataBlock = [oparlData];
-  }
-  let linksBlock = {
-    id: currentUrl,
-    type: 'Node',
-  };
-  if (oparlData['links']) {
-    linksBlock = { ...linksBlock, ...oparlData['links'] };
-  }
-  // Add linkToPublications based on content
-  if (dataBlock.length) {
-    if (dataBlock[0]['type'].endsWith('System') && dataBlock[0]['body']) {
-      const linkToBody = new URL(dataBlock[0]['body']);
-      const linkToBodyWithProxy = rewriteLinkWithProxy(linkToBody, req);
-      linksBlock['body'] = linkToBodyWithProxy.toString();
-    }
-    if (dataBlock[0]['type'].endsWith('Body')) {
-      if (dataBlock[0]['organization']) {
-        const linkToOrganization = new URL(dataBlock[0]['organization']);
-        const linkToOrganizationWithProxy = rewriteLinkWithProxy(
-          linkToOrganization,
-          req,
-        );
-        linksBlock['organization'] = linkToOrganizationWithProxy.toString();
-      }
-      if (dataBlock[0]['person']) {
-        const linkToPerson = new URL(dataBlock[0]['person']);
-        const linkToPersonWithProxy = rewriteLinkWithProxy(linkToPerson, req);
-        linksBlock['person'] = linkToPersonWithProxy.toString();
-      }
-      if (dataBlock[0]['meeting']) {
-        const linkToMeeting = new URL(dataBlock[0]['meeting']);
-        const linkToMeetingWithProxy = rewriteLinkWithProxy(linkToMeeting, req);
-        linksBlock['meeting'] = linkToMeetingWithProxy.toString();
-      }
-      if (dataBlock[0]['paper']) {
-        const linkToPaper = new URL(dataBlock[0]['paper']);
-        const linkToPaperWithProxy = rewriteLinkWithProxy(linkToPaper, req);
-        linksBlock['paper'] = linkToPaperWithProxy.toString();
-      }
-    }
-    if (dataBlock[0]['type'].endsWith('Meeting')) {
-      for (const meeting of dataBlock) {
-        if (meeting['agendaItem']) {
-          for (const agendaItem of meeting['agendaItem']) {
-            if (agendaItem['consultation']) {
-              const linkToConsultation = new URL(agendaItem['consultation']);
-              const linkToConsultationWithProxy = rewriteLinkWithProxy(
-                linkToConsultation,
-                req,
-              );
-              if (!linksBlock['consultation']) linksBlock['consultation'] = [];
-              linksBlock['consultation'].push(
-                linkToConsultationWithProxy.toString(),
-              );
-            }
-          }
-        }
-      }
-    }
-  }
-  // Add linkToPublications based on existing links
-  if (oparlData['links'] && oparlData['links']['next']) {
-    const linkToNext = new URL(oparlData['links']['next']);
-    const linkToNextWithProxy = rewriteLinkWithProxy(linkToNext, req);
-    linksBlock['next'] = linkToNextWithProxy.toString();
-  }
+/**
+ * Extracts all URLs from quads with predicate lblod:linkToPublication from Turtle data.
+ * @param {string} convertedOparlData - RDF data in Turtle syntax.
+ * @returns {Array} Array of linkToPublication URLs.
+ */
+export function extractLinkToPublications(convertedOparlData) {
+  const parser = new Parser({ format: 'text/turtle' });
+  const store = new Store();
 
-  // Enrich original response with context and overwrite links
-  if (!EMBED_JSONLD_CONTEXT)
-    oparlData['@context'] = `${req.protocol}://${req.get('host')}/context.json`;
-  else oparlData['@context'] = OPARL_JSON_LD_CONTEXT['@context'];
+  // Parse the Turtle data into quads
+  const quads = parser.parse(convertedOparlData);
+  store.addQuads(quads);
 
-  oparlData['links'] = linksBlock;
+  // Define the predicate URI for lblod:linkToPublication
+  const predicate = 'http://lblod.data.gift/vocabularies/besluit/linkToPublication';
 
-  // Remove version from schema URIs
-  const oparlDataWithoutVersion = JSON.parse(
-    removeVersionFromOparlSchemaUri(JSON.stringify(oparlData))
-  );
-  return oparlDataWithoutVersion;
+  // Get all quads with that predicate
+  const matchingQuads = store.getQuads(null, predicate, null, null);
+
+  return matchingQuads.map(quad => quad.object.value);
+}
+
+/**
+ * convert results of select query to an array of objects.
+ * courtesy: Niels Vandekeybus & Felix
+ * @method parseResult
+ * @return {Array}
+ */
+export function parseResult(result) {
+  if (!(result.results && result.results.bindings.length)) return [];
+
+  const bindingKeys = result.head.vars;
+  return result.results.bindings.map((row) => {
+    const obj = {};
+    bindingKeys.forEach((key) => {
+      if (
+        row[key] &&
+        row[key].datatype == 'http://www.w3.org/2001/XMLSchema#integer' &&
+        row[key].value
+      ) {
+        obj[key] = parseInt(row[key].value);
+      } else if (
+        row[key] &&
+        row[key].datatype == 'http://www.w3.org/2001/XMLSchema#dateTime' &&
+        row[key].value
+      ) {
+        obj[key] = new Date(row[key].value);
+      } else obj[key] = row[key] ? row[key].value : undefined;
+    });
+    return obj;
+  });
 }
