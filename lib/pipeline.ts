@@ -7,10 +7,10 @@ import {
 } from './file-helpers';
 
 export async function run(taskUri) {
-  try {
-    const task = await loadCollectingTask(taskUri);
-    if (!task) return;
+  const task = await loadCollectingTask(taskUri);
+  if (!task) return;
 
+  try {
     await updateTaskStatus(task, STATUS_BUSY);
 
     // Get ELI response from OParl URL in the task
@@ -49,9 +49,7 @@ export async function run(taskUri) {
     await updateTaskStatus(task, STATUS_SUCCESS);
   } catch (e) {
     console.error(e);
-    if (task) {
-      await appendTaskError(task, e.message);
-      await updateTaskStatus(task, STATUS_FAILED);
-    }
+    await appendTaskError(task, e.message);
+    await updateTaskStatus(task, STATUS_FAILED);
   }
 }
