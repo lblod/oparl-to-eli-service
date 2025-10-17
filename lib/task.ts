@@ -87,6 +87,7 @@ export async function loadCollectingTask(subject) {
      ${PREFIXES}
      SELECT DISTINCT ?graph ?task ?id ?job ?created ?modified ?status ?index ?operation ?error ?url WHERE {
       GRAPH ?graph {
+        BIND(${sparqlEscapeUri(subject)} as ?task)
         ?task a ${sparqlEscapeUri(TASK_TYPE)}.
         ?task dct:isPartOf ?job;
                       mu:uuid ?id;
@@ -102,7 +103,6 @@ export async function loadCollectingTask(subject) {
         ?task task:inputContainer/task:hasHarvestingCollection/dct:hasPart/nie:url ?url.
         
         OPTIONAL { ?task task:error ?error. }
-        BIND(${sparqlEscapeUri(subject)} as ?task)
       }
      }
     `;
@@ -219,7 +219,8 @@ export async function createTask(
                 dct:modified ${sparqlEscapeDateTime(created)};
                 adms:status ${sparqlEscapeUri(status)};
                 task:index ${sparqlEscapeString(index)};
-                task:operation ${sparqlEscapeUri(operation)}.
+                task:operation ${sparqlEscapeUri(operation)};
+                task:inputContainer ${sparqlEscapeUri(inputContainerUri)} .
 
         ${inputContainerTriples}
 
