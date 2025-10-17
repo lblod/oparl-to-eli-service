@@ -78,7 +78,7 @@ export async function isTask(subject) {
       }
      }
     `;
-  const result = await query(queryStr, {}, connectionOptions);
+  const result = await query(queryStr);
   return result.results.bindings.length;
 }
   
@@ -106,7 +106,7 @@ export async function loadCollectingTask(subject) {
       }
      }
     `;
-  const task = parseResult(await query(queryTask, {}, connectionOptions))[0];
+  const task = parseResult(await query(queryTask, {}, { mayRetry: true }))[0];
   if (!task) return null;
   return task;
 }
