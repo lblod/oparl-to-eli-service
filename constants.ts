@@ -1,4 +1,5 @@
 import env from 'env-var';
+import { isGeneratorObject } from 'util/types';
 
 export const OPARL_TO_ELI_SERVICE_URI = 'http://lblod.data.gift/services/oparl-to-eli-service';
 
@@ -27,7 +28,7 @@ export const ERROR_TYPE = 'http://open-services.net/ns/core#Error';
 export const ERROR_URI_PREFIX = 'http://redpencil.data.gift/id/jobs/error/';
 
 export const MU_SPARQL_ENDPOINT = env.get('MU_SPARQL_ENDPOINT').default('http://database:8890/sparql').asString();
-export const MU_APPLICATION_GRAPH = env.get('MU_APPLICATION_GRAPH').default('http://mu.semte.ch/graphs/harvesting/oparl').asString();
+export const TARGET_GRAPH = env.get('TARGET_GRAPH').default('http://mu.semte.ch/graphs/harvesting').asString();
 
 export const PREFIXES = `
   PREFIX harvesting: <http://lblod.data.gift/vocabularies/harvesting/>
@@ -47,6 +48,8 @@ export const PREFIXES = `
 export const OPARL_JSON_LD_CONTEXT = {
   '@context': {
     '@vocab': 'https://schema.oparl.org/',
+    'more-it-solutions': 'http://more-it-solutions.de/',
+    'more-software-gmbh': 'http://more-software-gmbh.de/',
     id: '@id',
     type: '@type',
     data: '@included',
@@ -191,5 +194,6 @@ WHERE {
       ?s ?p ?o .
       
       FILTER (?type NOT IN (oparl:Paper, oparl:File, oparl:Consultation))
+      FILTER(!isBlank(?s) && !isBlank(?p) && !isBlank(?o))
     }`,
 ];
