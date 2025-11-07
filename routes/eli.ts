@@ -1,8 +1,6 @@
 import express, { Request, Response } from 'express';
-
+import { getEliData } from '../lib/utils';
 import { OPARL_ENDPOINT } from '../config';
-import { getOparlData } from '../lib/utils';
-import { enrichOparlDataToJsonLd } from '../lib/enrich';
 
 const router = express.Router();
 
@@ -12,13 +10,16 @@ router.get('/*', async (req: Request, res: Response) => {
     const oparlEndpoint = req.params.oparlEndpoint
       ? req.params.oparlEndpoint
       : OPARL_ENDPOINT;
-    const oparlUrl = `${oparlEndpoint}${req.path.substring(req.path.indexOf('/oparl') + 6)}`;
-    let oparlData = await getOparlData(oparlUrl);
+    const oparlUrl = `${oparlEndpoint}${req.path.substring(req.path.indexOf('/eli') + 7)}`;
+    const format =
+      req.headers.accept && req.headers.accept.includes('json')
+        ? 'application/ld+json'
+        : 'text/turtle';
     const currentUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-    oparlData = enrichOparlDataToJsonLd(oparlData, currentUrl);
+    const convertedOparlData = await getEliData(oparlUrl, format, currentUrl);
 
-    res.setHeader('Content-Type', 'application/ld+json');
-    res.json(oparlData);
+    res.setHeader('Content-Type', 'text/turtle');
+    res.send(convertedOparlData);
   } catch (err: unknown) {
     console.error(err);
     if (err instanceof Error) {
