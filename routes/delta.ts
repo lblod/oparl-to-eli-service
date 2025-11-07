@@ -7,7 +7,6 @@ const router = express.Router();
 
 router.post('/*', async function(req: Request, res: Response)  {
   try {
-    console.log("yes");
     const entries = new Delta(req.body).getInsertsFor(
       'http://www.w3.org/ns/adms#status',
       STATUS_SCHEDULED,

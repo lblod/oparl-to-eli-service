@@ -2,19 +2,20 @@ import express, { Request, Response } from 'express';
 
 import { OPARL_ENDPOINT } from '../config';
 import {
-  MU_APPLICATION_GRAPH,
+  TARGET_GRAPH,
   STATUS_SCHEDULED,
   TASK_HARVESTING_OPARL,
 } from '../constants';
-import { createTask } from '../lib/task';
+import { createJob, createTask } from '../lib/task';
 
 const router = express.Router();
 
 router.post('/*', async (req, res) => {
   try {
+    //await createJob(TARGET_GRAPH, OPARL_ENDPOINT);
     await createTask(
-      MU_APPLICATION_GRAPH,
-      '1',
+      TARGET_GRAPH,
+      '0',
       TASK_HARVESTING_OPARL,
       STATUS_SCHEDULED,
       OPARL_ENDPOINT,

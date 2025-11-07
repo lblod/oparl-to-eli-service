@@ -69,7 +69,8 @@ export async function getEliData(
 ) {
   let oparlData = await getOparlData(oparlUrl);
   oparlData = enrichOparlDataToJsonLd(oparlData, proxyUrl);
-  return await convertOparlToEli(oparlData, format);
+  oparlData = await convertOparlToEli(oparlData, format);
+  return oparlData;
 }
 
 /**
@@ -124,3 +125,4 @@ export function parseResult(result) {
     return obj;
   });
 }
+

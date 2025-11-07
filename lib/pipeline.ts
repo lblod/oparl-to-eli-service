@@ -1,10 +1,34 @@
 import { uuid } from 'mu';
-import { STATUS_BUSY, STATUS_SUCCESS, STATUS_FAILED, STATUS_SCHEDULED, CONTAINER_URI_PREFIX, TASK_HARVESTING_OPARL } from '../constants';
-import { loadCollectingTask, updateTaskStatus, appendTaskError, appendTaskResultFile, createTask} from './task';
-import { extractLinkToPublications, getEliData } from './utils';
 import {
-  writeFileToTriplestore,
-} from './file-helpers';
+  STATUS_BUSY,
+  STATUS_SUCCESS,
+  STATUS_FAILED,
+  STATUS_SCHEDULED,
+  CONTAINER_URI_PREFIX,
+  TASK_HARVESTING_OPARL,
+  IMPORT_GRAPH_URI_PREFIX,
+  MU_SPARQL_ENDPOINT,
+  TARGET_GRAPH,
+} from '../constants';
+import {
+  loadCollectingTask,
+  updateTaskStatus,
+  appendTaskError,
+  appendTaskResultFile,
+  appendTaskResultGraph,
+  createTask,
+} from './task';
+import { extractLinkToPublications, getEliData } from './utils';
+import { writeFileToTriplestore } from './file-helpers';
+import {
+  deleteFromGraph,
+  insertFromTripleFileIntoGraph,
+  insertIntoGraph,
+  insertTurtleFileIntoGraph,
+  insertTurtleIntoGraph,
+  n3ToTripleJSON,
+  turtleToStatements,
+} from './super-utils';
 
 export async function run(taskUri) {
   const task = await loadCollectingTask(taskUri);
@@ -12,6 +36,11 @@ export async function run(taskUri) {
 
   try {
     await updateTaskStatus(task, STATUS_BUSY);
+    const graphContainer = { id: uuid() };
+    const resultContainer = `http://redpencil.data.gift/id/result-containers/oparl-landingzone/${uuid()}`;
+    graphContainer.uri = `http://redpencil.data.gift/id/dataContainers/${graphContainer.id}`;
+    const fileContainer = { id: uuid() };
+    fileContainer.uri = `http://redpencil.data.gift/id/dataContainers/${fileContainer.id}`;
 
     // Get ELI response from OParl URL in the task
     const convertedOparlData = await getEliData(
@@ -21,20 +50,33 @@ export async function run(taskUri) {
     );
 
     // Write ELI to file
-    const fileContainer = { id: uuid() };
-    fileContainer.uri = `${CONTAINER_URI_PREFIX}${fileContainer.id}`;
-    const validFile = await writeFileToTriplestore(
+    const fileResult = await writeFileToTriplestore(
       task.graph,
       convertedOparlData,
       `${fileContainer.id}.ttl`,
       task.url,
       task.jobId,
     );
-    await appendTaskResultFile(task, fileContainer, validFile);
+    await appendTaskResultFile(task, fileContainer, fileResult); // for debugging purpose in dashboard
+
+    // await insertTurtleIntoGraph(
+    //   convertedOparlData,
+    //   MU_SPARQL_ENDPOINT,
+    //   resultContainer,
+    // );
+    // save file content to pub graph
+    await insertTurtleIntoGraph(
+      convertedOparlData,
+      MU_SPARQL_ENDPOINT,
+      TARGET_GRAPH,
+    );
 
     // extract linkToPublications and create new task for each link
-    const linkToPublications = await extractLinkToPublications(convertedOparlData);
-    console.log(`Extracted ${linkToPublications.length} linkToPublication(s) from OParl ${task.url}`);
+    const linkToPublications =
+      await extractLinkToPublications(convertedOparlData);
+    console.log(
+      `Extracted ${linkToPublications.length} linkToPublication(s) from OParl ${task.url}`,
+    );
     for (const linkToPublication of linkToPublications) {
       console.log(`Creating new task for ${linkToPublication}`);
       await createTask(
@@ -46,6 +88,7 @@ export async function run(taskUri) {
       );
     }
 
+    await appendTaskResultGraph(task, graphContainer, resultContainer);
     await updateTaskStatus(task, STATUS_SUCCESS);
   } catch (e) {
     console.error(e);

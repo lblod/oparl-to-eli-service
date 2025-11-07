@@ -4,6 +4,8 @@ import {
   sparqlEscapeDateTime,
   uuid,
 } from 'mu';
+import { v4 as uuidv4 } from 'uuid';
+
 import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
 import {
   TASK_TYPE,
@@ -21,6 +23,8 @@ import {
   JOB_URI_PREFIX,
   OPARL_TO_ELI_SERVICE_URI,
   JOB_HARVESTING_OPARL,
+  IMPORT_GRAPH_URI_PREFIX,
+  STATUS_SCHEDULED,
 } from '../constants';
 import { parseResult } from './utils';
 const connectionOptions = {
@@ -100,7 +104,12 @@ export async function loadCollectingTask(subject) {
             ${sparqlEscapeUri(TASK_HARVESTING_OPARL)}
           }
         
-        ?task task:inputContainer/task:hasHarvestingCollection/dct:hasPart/nie:url ?url.
+        ?task task:inputContainer ?inputContainer .
+        ?inputContainer task:hasHarvestingCollection ?harvestCollection .
+        ?harvestCollection a harvesting:HarvestingCollection .
+        ?harvestCollection dct:hasPart ?rdo .
+        ?rdo a nfo:RemoteDataObject;
+            nie:url ?url.
         
         OPTIONAL { ?task task:error ?error. }
       }
@@ -168,20 +177,20 @@ export async function createTask(
   status,
   urlToHarvest,
 ) {
-  const taskId = uuid();
+  const taskId = uuidv4();
   const taskUri = TASK_URI_PREFIX + taskId;
   const created = new Date();
 
-  const jobId = uuid();
+  const jobId = uuidv4();
   const jobUri = JOB_URI_PREFIX + jobId;
 
-  const inputContainerId = uuid();
+  const inputContainerId = uuidv4();
   const inputContainerUri = CONTAINER_URI_PREFIX + inputContainerId;
 
-  const harvestCollectionId = uuid();
+  const harvestCollectionId = uuidv4();
   const harvestCollectionUri = HARVEST_COLLECTION_URI_PREFIX + harvestCollectionId;
 
-  const remoteDataObjectId = uuid();
+  const remoteDataObjectId = uuidv4();
   const remoteDataObjectUri = REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
 
   const jobTriples = `
@@ -234,6 +243,43 @@ export async function createTask(
   return;
 }
 
+export async function createJob(graph, urlToHarvest) {
+  const created = new Date();
+  const jobId = uuidv4();
+  const jobUri = JOB_URI_PREFIX + jobId;
+
+  const remoteDataObjectId = uuidv4();
+  const remoteDataObjectUri = REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
+
+  const jobTriples = `
+        ${sparqlEscapeUri(jobUri)} a cogs:Job;
+          mu:uuid ${sparqlEscapeString(jobId)} ;
+          dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)} ;
+          adms:status ${sparqlEscapeUri(STATUS_SCHEDULED)} ;
+          dct:created ${sparqlEscapeDateTime(created)};
+          dct:modified ${sparqlEscapeDateTime(created)} ;
+          nie:url  ${sparqlEscapeUri(remoteDataObjectUri)} ;
+          task:operation ${sparqlEscapeUri(JOB_HARVESTING_OPARL)} .
+
+        ${sparqlEscapeUri(remoteDataObjectUri)} a nfo:RemoteDataObject ;
+          mu:uuid ${sparqlEscapeString(remoteDataObjectId)} ;
+          nie:url ${sparqlEscapeString(urlToHarvest)} .
+  `;
+
+  const insertQuery = `
+    ${PREFIXES}
+    INSERT DATA {
+      GRAPH ${sparqlEscapeUri(graph)} {
+        ${jobTriples}
+      }
+    }
+  `;
+
+  await update(insertQuery);
+
+  return;
+}
+
 export async function appendTaskResultFile(task, container, fileUri) {
   // prettier-ignore
   const queryStr = `
@@ -246,6 +292,26 @@ export async function appendTaskResultFile(task, container, fileUri) {
         ${sparqlEscapeUri(container.uri)} a nfo:DataContainer.
         ${sparqlEscapeUri(container.uri)} mu:uuid ${sparqlEscapeString(container.id)}.
         ${sparqlEscapeUri(container.uri)} task:hasFile ${sparqlEscapeUri(fileUri)}.
+        ${sparqlEscapeUri(task.task)} task:resultsContainer ${sparqlEscapeUri(container.uri)}.
+      }
+    }
+  `;
+
+  await update(queryStr, {}, connectionOptions);
+}
+
+export async function appendTaskResultGraph(task, container, graphUri) {
+  // prettier-ignore
+  const queryStr = `
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
+    PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    INSERT DATA {
+      GRAPH ${sparqlEscapeUri(task.graph)} {
+        ${sparqlEscapeUri(container.uri)} a nfo:DataContainer.
+        ${sparqlEscapeUri(container.uri)} mu:uuid ${sparqlEscapeString(container.id)}.
+        ${sparqlEscapeUri(container.uri)} task:hasGraph ${sparqlEscapeUri(graphUri)}.
         ${sparqlEscapeUri(task.task)} task:resultsContainer ${sparqlEscapeUri(container.uri)}.
       }
     }

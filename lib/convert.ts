@@ -35,6 +35,7 @@ export async function convertOparlToEli(oparlData, format = 'text/turtle') {
     },
   });
   for await (const quad of eliStore) {
+    // 
     writer.addQuad(quad);
   }
 
