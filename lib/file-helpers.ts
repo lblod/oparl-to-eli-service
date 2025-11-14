@@ -47,12 +47,12 @@ export async function writeFileToTriplestore(
     : join('/share', folderId, 'extract');
   await mkdir(baseFolder, { recursive: true });
 
-  const phyId = uuid();
-  const phyFilename = `${phyId}.${extension}`;
-  const path = `${baseFolder}/${phyFilename}`;
+  const physicalFileId = uuid();
+  const physicalFilename = `${physicalFileId}.${extension}`;
+  const path = `${baseFolder}/${physicalFilename}`;
   const physicalFile = path.replace('/share/', 'share://');
-  const loId = uuid();
-  const logicalFile = `http://data.lblod.info/id/files/${loId}`;
+  const logicalFileId = uuid();
+  const logicalFile = `http://data.lblod.info/id/files/${logicalFileId}`;
   const now = new Date();
 
   try {
@@ -73,8 +73,8 @@ export async function writeFileToTriplestore(
           GRAPH ${sparqlEscapeUri(graph)} {
             ${sparqlEscapeUri(physicalFile)} a nfo:FileDataObject;
                                     nie:dataSource ${sparqlEscapeUri(logicalFile)} ;
-                                    mu:uuid ${sparqlEscapeString(phyId)};
-                                    nfo:fileName ${sparqlEscapeString(phyFilename)} ;
+                                    mu:uuid ${sparqlEscapeString(physicalFileId)};
+                                    nfo:fileName ${sparqlEscapeString(physicalFilename)} ;
                                     dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)} ;
                                     dct:created ${sparqlEscapeDateTime(now)};
                                     dct:modified ${sparqlEscapeDateTime(now)};
@@ -83,7 +83,7 @@ export async function writeFileToTriplestore(
                                     dbpedia:fileExtension "${extension}".
             ${sparqlEscapeUri(logicalFile)} a nfo:FileDataObject;
                                     prov:wasDerivedFrom ${sparqlEscapeUri(sourceFile)};
-                                    mu:uuid ${sparqlEscapeString(loId)};
+                                    mu:uuid ${sparqlEscapeString(logicalFileId)};
                                     nfo:fileName ${sparqlEscapeString(logicalFileName)} ;
                                     dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)} ;
                                     dct:created ${sparqlEscapeDateTime(now)};
