@@ -93,3 +93,8 @@ The task model described in the [job-controller-service](https://github.com/lblo
     mu:uuid """e1ac5093-aa99-11f0-9253-d7fdf867c511""" ;
     nie:url """https://ris.freiburg.de/oparl""" .
 ```
+
+## Test ELI mapping
+
+To test ELI mappings with SPARQL constructs, you can use the [Comunica UI](https://query.comunica.dev/#datasources=http%3A%2F%2Flocalhost%3A8888%2Foparl%2Foparl%2Fbody%2FFR%2Fpaper&query=PREFIX%20example%3A%20%3Chttp%3A%2F%2Fwww.example.org%2Frdf%23%3E%0Aconstruct%20%7B%0A%20%20%3Fs%20a%20example%3AThing%20.%0A%7D%0Awhere%20%7B%0A%20%20%3Fs%20a%20%3Chttps%3A%2F%2Fschema.oparl.org%2FPaper%3E%20.%0A%7D).
+The OPARL endpoint in JSON-LD is used as data source to test the ELI mapping.
