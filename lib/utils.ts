@@ -40,8 +40,8 @@ export function rewriteLinkWithProxy(originalUrl: string, proxyUrl: string): URL
  * @param {string} url - Oparl schema URL 
  * @returns {string} Oparl schema URL without version
  */
-export function removeVersionFromOparlSchemaUri(url: string): string {
-  return url.replaceAll(/(schema\.oparl\.org)\/\d+\.\d+(?=\/|$)/g, '$1');
+export function removeVersionFromOparlSchemaUri(content: string): string {
+  return content.replaceAll(/(schema\.oparl\.org)\/\d+\.\d+(?=\/|$)/g, '$1');
 }
 
 /**
