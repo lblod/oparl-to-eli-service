@@ -17,9 +17,12 @@ export function rewriteLinkWithProxy(originalUrl: string, proxyUrl: string): URL
   // replace host
   const protocol = proxyUrlObj.protocol;
   const host = proxyUrlObj.host;
-  let firstSegment = proxyUrlObj.toString().split('/')[1]; // 'eli' or 'oparl' or '' in harvesting
-  console.log('first segment: ' + firstSegment);
-  if (firstSegment != '') firstSegment = `/${firstSegment}`;
+  let firstSegment = '';
+  // host is the same when harvesting
+  if (host != originalUrlObj.host) {
+    firstSegment = `/${proxyUrlObj.pathname.split('/')[1]}`; // 'eli' or 'oparl'
+    console.log('first segment: ' + firstSegment);
+  }
 
   const newUrl = new URL(originalUrl.toString());
   newUrl.protocol = protocol;
