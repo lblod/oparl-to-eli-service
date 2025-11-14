@@ -9,10 +9,10 @@ export function enrichOparlDataToJsonLd(oparlData, proxyUrl: string) {
     id: proxyUrl,
     type: 'Node',
   };
+  // Create links block with page if not exists
   // Add existing links from JSON
-  if (oparlData['links']) {
-    oparlData['links'] = { ...page, ...oparlData['links'] };
-  }
+  oparlData['links'] = { ...page, ...oparlData['links'] };
+
   addLinkToPublications(dataBlock, oparlData['links'], proxyUrl);
   addExistingPaginationLinks(oparlData, oparlData['links'], proxyUrl);
 
