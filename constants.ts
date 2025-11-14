@@ -29,21 +29,26 @@ export const ERROR_URI_PREFIX = 'http://redpencil.data.gift/id/jobs/error/';
 
 export const MU_SPARQL_ENDPOINT = env.get('MU_SPARQL_ENDPOINT').default('http://database:8890/sparql').asString();
 export const TARGET_GRAPH = env.get('TARGET_GRAPH').default('http://mu.semte.ch/graphs/harvesting').asString();
+export const STRING_LIMIT = env.get('STRING_LIMIT').default('5000').asIntPositive();
 
-export const PREFIXES = `
-  PREFIX harvesting: <http://lblod.data.gift/vocabularies/harvesting/>
-  PREFIX terms: <http://purl.org/dc/terms/>
-  PREFIX prov: <http://www.w3.org/ns/prov#>
-  PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
-  PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-  PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-  PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
-  PREFIX dct: <http://purl.org/dc/terms/>
-  PREFIX oslc: <http://open-services.net/ns/core#>
-  PREFIX cogs: <http://vocab.deri.ie/cogs#>
-  PREFIX adms: <http://www.w3.org/ns/adms#>
-  PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-`;
+export const PREFIXES = {
+  'harvesting': 'http://lblod.data.gift/vocabularies/harvesting/',
+  'terms': 'http://purl.org/dc/terms/',
+  'prov': 'http://www.w3.org/ns/prov#',
+  'nie': 'http://www.semanticdesktop.org/ontologies/2007/01/19/nie#',
+  'ext': 'http://mu.semte.ch/vocabularies/ext/',
+  'mu': 'http://mu.semte.ch/vocabularies/core/',
+  'task': 'http://redpencil.data.gift/vocabularies/tasks/',
+  'dct': 'http://purl.org/dc/terms/',
+  'oslc': 'http://open-services.net/ns/core#',
+  'cogs': 'http://vocab.deri.ie/cogs#',
+  'adms': 'http://www.w3.org/ns/adms#',
+  'nfo': 'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#',
+  'dbpedia': 'http://dbpedia.org/ontology/',
+  'eli': 'http://data.europa.eu/eli/ontology#',
+  'eli-dl': 'http://data.europa.eu/eli/ontology/dl#',
+  'xsd': 'http://www.w3.org/2001/XMLSchema#',
+};
 
 export const OPARL_JSON_LD_CONTEXT = {
   '@context': {

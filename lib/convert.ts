@@ -4,9 +4,13 @@ import { Readable } from 'stream';
 import { QueryEngine } from '@comunica/query-sparql';
 const engine = new QueryEngine();
 
-import { SPARQL_CONSTRUCTS } from '../constants';
+import { PREFIXES, SPARQL_CONSTRUCTS } from '../constants';
 
-export async function convertOparlToEli(oparlData, format = 'text/turtle') {
+export async function convertOparlToEli(
+  oparlData,
+  format: string = 'text/turtle',
+  prefixes: Record<string, string> = PREFIXES,
+) {
   const oparlStore = new Store();
   const eliStore = new Store();
   const parser = new ParserJsonld();
@@ -19,22 +23,15 @@ export async function convertOparlToEli(oparlData, format = 'text/turtle') {
     const result = await engine.queryQuads(constructQuery, {
       sources: [oparlStore],
     });
-    // First in store to prevent duplicate quads as response
     for await (const quad of result) {
-      if (!eliStore.has(quad)) eliStore.addQuad(quad);
+      eliStore.addQuad(quad);
     }
   }
   const writer = new Writer({
     format,
-    prefixes: {
-      eli: 'http://data.europa.eu/eli/ontology#',
-      'eli-dl': 'http://data.europa.eu/eli/ontology/dl#',
-      dcterms: 'http://purl.org/dc/terms/',
-      xsd: 'http://www.w3.org/2001/XMLSchema#',
-    },
+    prefixes: prefixes,
   });
   for await (const quad of eliStore) {
-    // 
     writer.addQuad(quad);
   }
 

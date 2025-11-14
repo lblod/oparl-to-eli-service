@@ -4,9 +4,7 @@ import {
   STATUS_SUCCESS,
   STATUS_FAILED,
   STATUS_SCHEDULED,
-  CONTAINER_URI_PREFIX,
   TASK_HARVESTING_OPARL,
-  IMPORT_GRAPH_URI_PREFIX,
   MU_SPARQL_ENDPOINT,
   TARGET_GRAPH,
 } from '../constants';
@@ -22,7 +20,7 @@ import { extractLinkToPublications, getEliData } from './utils';
 import { writeFileToTriplestore } from './file-helpers';
 import {
   deleteFromGraph,
-  insertFromTripleFileIntoGraph,
+  insertFromTurtleIntoGraph,
   insertIntoGraph,
   insertTurtleFileIntoGraph,
   insertTurtleIntoGraph,
@@ -59,13 +57,7 @@ export async function run(taskUri) {
     );
     await appendTaskResultFile(task, fileContainer, fileResult); // for debugging purpose in dashboard
 
-    // await insertTurtleIntoGraph(
-    //   convertedOparlData,
-    //   MU_SPARQL_ENDPOINT,
-    //   resultContainer,
-    // );
-    // save file content to pub graph
-    await insertTurtleIntoGraph(
+    await insertFromTurtleIntoGraph(
       convertedOparlData,
       MU_SPARQL_ENDPOINT,
       TARGET_GRAPH,

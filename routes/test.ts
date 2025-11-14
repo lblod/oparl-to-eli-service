@@ -18,7 +18,7 @@ router.post('/*', async (req, res) => {
       '0',
       TASK_HARVESTING_OPARL,
       STATUS_SCHEDULED,
-      OPARL_ENDPOINT,
+      `${OPARL_ENDPOINT}`,
     );
     res.status(200).json({
       message: `Test Oparl harvesting task created to Oparl endpoint: ${OPARL_ENDPOINT}`,

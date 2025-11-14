@@ -2,7 +2,7 @@ import { EMBED_JSONLD_CONTEXT } from '../config';
 import { OPARL_JSON_LD_CONTEXT } from '../constants';
 import { removeVersionFromOparlSchemaUri, rewriteLinkWithProxy } from './utils';
 
-export function enrichOparlDataToJsonLd(oparlData: any, proxyUrl: string) {
+export function enrichOparlDataToJsonLd(oparlData, proxyUrl: string) {
   let dataBlock = [];
   if (oparlData['data']) {
     dataBlock = oparlData['data'];

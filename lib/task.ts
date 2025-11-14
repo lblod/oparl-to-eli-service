@@ -23,20 +23,16 @@ import {
   JOB_URI_PREFIX,
   OPARL_TO_ELI_SERVICE_URI,
   JOB_HARVESTING_OPARL,
-  IMPORT_GRAPH_URI_PREFIX,
   STATUS_SCHEDULED,
 } from '../constants';
-import { parseResult } from './utils';
+import { convertPrefixesObjectToSPARQLPrefixes, parseResult } from './utils';
 const connectionOptions = {
   sparqlEndpoint: MU_SPARQL_ENDPOINT,
   mayRetry: true,
 };
 export async function failBusyImportTasks() {
   const queryStr = `
-      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-      PREFIX adms: <http://www.w3.org/ns/adms#>
-      PREFIX dct: <http://purl.org/dc/terms/>
-      PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
+      ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
       DELETE {
         GRAPH ?g {
           ?task adms:status ${sparqlEscapeUri(STATUS_BUSY)} .
@@ -74,7 +70,7 @@ export async function failBusyImportTasks() {
 export async function isTask(subject) {
   //TODO: move to ask query
   const queryStr = `
-     ${PREFIXES}
+     ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
      SELECT ?subject WHERE {
       GRAPH ?g {
         BIND(${sparqlEscapeUri(subject)} as ?subject)
@@ -88,7 +84,7 @@ export async function isTask(subject) {
   
 export async function loadCollectingTask(subject) {
   const queryTask = `
-     ${PREFIXES}
+     ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
      SELECT DISTINCT ?graph ?task ?id ?job ?created ?modified ?status ?index ?operation ?error ?url WHERE {
       GRAPH ?graph {
         BIND(${sparqlEscapeUri(subject)} as ?task)
@@ -123,9 +119,7 @@ export async function loadCollectingTask(subject) {
 export async function updateTaskStatus(task, status) {
   await update(
     `
-      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-      PREFIX adms: <http://www.w3.org/ns/adms#>
-      PREFIX dct: <http://purl.org/dc/terms/>
+      ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
       DELETE {
         GRAPH ?g {
           ?subject adms:status ?status .
@@ -156,7 +150,7 @@ export async function appendTaskError(task, errorMsg) {
   const uri = ERROR_URI_PREFIX + id;
   
   const queryError = `
-     ${PREFIXES}
+      ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
      INSERT DATA {
       GRAPH ${sparqlEscapeUri(task.graph)}{
         ${sparqlEscapeUri(uri)} a ${sparqlEscapeUri(ERROR_TYPE)};
@@ -218,7 +212,7 @@ export async function createTask(
   `;
 
   const insertQuery = `
-    ${PREFIXES}
+    ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
     INSERT DATA {
       GRAPH ${sparqlEscapeUri(graph)} {
        ${sparqlEscapeUri(taskUri)} a ${sparqlEscapeUri(TASK_TYPE)};
@@ -267,7 +261,7 @@ export async function createJob(graph, urlToHarvest) {
   `;
 
   const insertQuery = `
-    ${PREFIXES}
+    ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
     INSERT DATA {
       GRAPH ${sparqlEscapeUri(graph)} {
         ${jobTriples}

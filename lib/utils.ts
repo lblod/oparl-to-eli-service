@@ -1,6 +1,7 @@
 import { convertOparlToEli } from './convert';
 import { Parser, Store } from 'n3';
 import { enrichOparlDataToJsonLd } from './enrich';
+import { PREFIXES } from '../constants';
 
 /**
  * Changes the protocol and host of an URL with the protocol and host from the provided proxy URL. Also, adds the first segment of the path of the proxy URL.
@@ -66,25 +67,31 @@ export async function getEliData(
   oparlUrl: string,
   format: string,
   proxyUrl: string,
+  prefixes: Record<string, string>,
 ) {
   let oparlData = await getOparlData(oparlUrl);
   oparlData = enrichOparlDataToJsonLd(oparlData, proxyUrl);
-  oparlData = await convertOparlToEli(oparlData, format);
+  oparlData = await convertOparlToEli(oparlData, format, prefixes);
   return oparlData;
 }
 
+export function parseTurtleIntoStore(turtleData: string): Store {
+  const parser = new Parser({ format: 'text/turtle' });
+  const store = new Store();
+
+  // Parse the Turtle data into quads
+  const quads = parser.parse(turtleData);
+  store.addQuads(quads);
+
+  return store;
+}
 /**
  * Extracts all URLs from quads with predicate lblod:linkToPublication from Turtle data.
  * @param {string} convertedOparlData - RDF data in Turtle syntax.
  * @returns {Array} Array of linkToPublication URLs.
  */
 export function extractLinkToPublications(convertedOparlData) {
-  const parser = new Parser({ format: 'text/turtle' });
-  const store = new Store();
-
-  // Parse the Turtle data into quads
-  const quads = parser.parse(convertedOparlData);
-  store.addQuads(quads);
+  const store = parseTurtleIntoStore(convertedOparlData);
 
   // Define the predicate URI for lblod:linkToPublication
   const predicate = 'http://lblod.data.gift/vocabularies/besluit/linkToPublication';
@@ -126,3 +133,44 @@ export function parseResult(result) {
   });
 }
 
+export function convertPrefixesObjectToSPARQLPrefixes(prefixesObj: Record<string, string>): string {
+  let prefixesStr = '';
+  for (const [prefix, uri] of Object.entries(prefixesObj)) {
+    prefixesStr += `PREFIX ${prefix}: <${uri}>\n`;
+  }
+  return prefixesStr;
+}
+
+export function toSparqlLiteral(lit) {
+  // Remove the leading and trailing quote if present
+  const hasLangTag = lit.match(/"[^]*"(@[a-zA-Z-]+)?$/);
+  let language = "";
+  let content = lit;
+
+  // Extract language tag if present
+  const langMatch = lit.match(/"[^]*"(@[a-zA-Z-]+)$/);
+  if (langMatch) {
+      language = langMatch[1]; // e.g. @de
+      content = lit.slice(0, lit.length - language.length);
+  }
+
+  // Strip the surrounding quotes
+  if (content.startsWith('"') && content.endsWith('"')) {
+      content = content.slice(1, -1);
+  }
+
+  const needsLongLiteral =
+      content.includes("\n") ||
+      content.includes("\r") ||
+      content.includes('"'); // inner quotes break short literals
+
+  if (needsLongLiteral) {
+      // Escape ONLY the triple-quote sequence if it appears
+      const safeContent = content.replace(/"""/g, '\\"""');
+      return `"""${safeContent}"""${language}`;
+  }
+
+  // Safe short literal
+  const escaped = content.replace(/"/g, '\\"');
+  return `"${escaped}"${language}`;
+}

@@ -9,7 +9,12 @@ import { join } from 'path';
 import { mkdir } from 'fs/promises';
 import { writeFile, stat } from 'fs/promises';
 import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
-import { MU_SPARQL_ENDPOINT, OPARL_TO_ELI_SERVICE_URI } from '../constants';
+import {
+  MU_SPARQL_ENDPOINT,
+  OPARL_TO_ELI_SERVICE_URI,
+  PREFIXES,
+} from '../constants';
+import { convertPrefixesObjectToSPARQLPrefixes } from './utils';
 const connectionOptions = {
   sparqlEndpoint: MU_SPARQL_ENDPOINT,
   mayRetry: true,
@@ -63,12 +68,7 @@ export async function writeFileToTriplestore(
 
     // prettier-ignore
     await update(`
-        PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-        PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
-        PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-        PREFIX dct: <http://purl.org/dc/terms/>
-        PREFIX prov: <http://www.w3.org/ns/prov#>
-        PREFIX dbpedia: <http://dbpedia.org/ontology/>
+        ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
         INSERT DATA {
           GRAPH ${sparqlEscapeUri(graph)} {
             ${sparqlEscapeUri(physicalFile)} a nfo:FileDataObject;
