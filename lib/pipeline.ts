@@ -18,15 +18,7 @@ import {
 } from './task';
 import { extractLinkToPublications, getEliData } from './utils';
 import { writeFileToTriplestore } from './file-helpers';
-import {
-  deleteFromGraph,
-  insertFromTurtleIntoGraph,
-  insertIntoGraph,
-  insertTurtleFileIntoGraph,
-  insertTurtleIntoGraph,
-  n3ToTripleJSON,
-  turtleToStatements,
-} from './super-utils';
+import { insertFromTurtleIntoGraph } from './super-utils';
 
 export async function run(taskUri) {
   const task = await loadCollectingTask(taskUri);
