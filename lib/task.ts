@@ -66,9 +66,8 @@ export async function failBusyImportTasks() {
     );
   }
 }
-  
+
 export async function isTask(subject) {
-  //TODO: move to ask query
   const queryStr = `
      ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
      SELECT ?subject WHERE {
@@ -77,11 +76,12 @@ export async function isTask(subject) {
         ?subject a ${sparqlEscapeUri(TASK_TYPE)}.
       }
      }
+     LIMIT 1
     `;
   const result = await query(queryStr);
   return result.results.bindings.length;
 }
-  
+
 export async function loadCollectingTask(subject) {
   const queryTask = `
      ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
@@ -115,7 +115,7 @@ export async function loadCollectingTask(subject) {
   if (!task) return null;
   return task;
 }
-  
+
 export async function updateTaskStatus(task, status) {
   await update(
     `
@@ -144,11 +144,11 @@ export async function updateTaskStatus(task, status) {
     { mayRetry: true },
   );
 }
-  
+
 export async function appendTaskError(task, errorMsg) {
   const id = uuid();
   const uri = ERROR_URI_PREFIX + id;
-  
+
   const queryError = `
       ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
      INSERT DATA {
@@ -160,7 +160,7 @@ export async function appendTaskError(task, errorMsg) {
       }
      }
     `;
-  
+
   await update(queryError, {}, { mayRetry: true });
 }
 
@@ -275,7 +275,6 @@ export async function createJob(graph, urlToHarvest) {
 }
 
 export async function appendTaskResultFile(task, container, fileUri) {
-  // prettier-ignore
   const queryStr = `
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
@@ -295,7 +294,6 @@ export async function appendTaskResultFile(task, container, fileUri) {
 }
 
 export async function appendTaskResultGraph(task, container, graphUri) {
-  // prettier-ignore
   const queryStr = `
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>

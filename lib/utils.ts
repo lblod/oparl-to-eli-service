@@ -1,58 +1,13 @@
 import { convertOparlToEli } from './convert';
 import { Parser, Store } from 'n3';
 import { enrichOparlDataToJsonLd } from './enrich';
-import { PREFIXES } from '../constants';
-
-/**
- * Changes the protocol and host of an URL with the protocol and host from the provided proxy URL. Also, adds the first segment of the path of the proxy URL.
- * For example, https://ris.freiburg.de/oparl/System becomes http://localhost:8888/eli/oparl/System
- * @param {string} originalUrl - URL that needs to be rewritten.
- * @param {string} proxyUrl - URL of the proxy
- * @returns {URL} URL object of the rewritten URL
- */
-export function rewriteLinkWithProxy(originalUrl: string, proxyUrl: string): URL {
-  const originalUrlObj = new URL(originalUrl);
-  const proxyUrlObj = new URL(proxyUrl);
-
-  // replace host
-  const protocol = proxyUrlObj.protocol;
-  const host = proxyUrlObj.host;
-  let firstSegment = '';
-  // host is the same when harvesting
-  if (host != originalUrlObj.host) {
-    firstSegment = `/${proxyUrlObj.pathname.split('/')[1]}`; // 'eli' or 'oparl'
-    console.log('first segment: ' + firstSegment);
-  }
-
-  const newUrl = new URL(originalUrl.toString());
-  newUrl.protocol = protocol;
-  newUrl.host = host;
-  newUrl.pathname = `${firstSegment}${originalUrlObj.pathname}`;
-  try {
-    console.log('new url: ' + newUrl.toString());
-    return newUrl;
-  } catch (error) {
-    console.error('Invalid URL:', originalUrl);
-    return originalUrlObj; // Fallback to the original URL if parsing fails
-  }
-}
-
-/**
- * Removes the schema version from an Oparl schema URL string
- * For example, https://schema.oparl.org/1.0/System becomes https://schema.oparl.org/System
- * @param {string} url - Oparl schema URL 
- * @returns {string} Oparl schema URL without version
- */
-export function removeVersionFromOparlSchemaUri(content: string): string {
-  return content.replaceAll(/(schema\.oparl\.org)\/\d+\.\d+(?=\/|$)/g, '$1');
-}
 
 /**
  * Fetch with logging and returning JSON
  * @param {string} oparlUrl - Oparl API URL 
  * @returns {object} JSON response
  */
-export async function getOparlData(oparlUrl: string) {
+async function getOparlData(oparlUrl: string) {
   const response = await fetch(oparlUrl);
   console.log('Sent Oparl request:', oparlUrl);
   if (!response.ok) throw new Error(`OParl request failed: ${response.status}`);
@@ -142,38 +97,4 @@ export function convertPrefixesObjectToSPARQLPrefixes(prefixesObj: Record<string
     prefixesStr += `PREFIX ${prefix}: <${uri}>\n`;
   }
   return prefixesStr;
-}
-
-export function toSparqlLiteral(lit) {
-  // Remove the leading and trailing quote if present
-  const hasLangTag = lit.match(/"[^]*"(@[a-zA-Z-]+)?$/);
-  let language = "";
-  let content = lit;
-
-  // Extract language tag if present
-  const langMatch = lit.match(/"[^]*"(@[a-zA-Z-]+)$/);
-  if (langMatch) {
-      language = langMatch[1]; // e.g. @de
-      content = lit.slice(0, lit.length - language.length);
-  }
-
-  // Strip the surrounding quotes
-  if (content.startsWith('"') && content.endsWith('"')) {
-      content = content.slice(1, -1);
-  }
-
-  const needsLongLiteral =
-      content.includes("\n") ||
-      content.includes("\r") ||
-      content.includes('"'); // inner quotes break short literals
-
-  if (needsLongLiteral) {
-      // Escape ONLY the triple-quote sequence if it appears
-      const safeContent = content.replace(/"""/g, '\\"""');
-      return `"""${safeContent}"""${language}`;
-  }
-
-  // Safe short literal
-  const escaped = content.replace(/"/g, '\\"');
-  return `"${escaped}"${language}`;
 }

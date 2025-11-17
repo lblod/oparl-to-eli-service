@@ -1,6 +1,5 @@
 import { EMBED_JSONLD_CONTEXT } from '../config';
 import { OPARL_JSON_LD_CONTEXT } from '../constants';
-import { removeVersionFromOparlSchemaUri, rewriteLinkWithProxy } from './utils';
 
 export function enrichOparlDataToJsonLd(oparlData, proxyUrl: string) {
   const dataBlock = createDataArrayFromJSON(oparlData);
@@ -98,4 +97,48 @@ function rewriteAndAssign(
   if (!sourceLink) return;
   const rewritten = rewriteLinkWithProxy(sourceLink, proxyUrl);
   targetObj[jsonKey] = rewritten.toString();
+}
+
+/**
+ * Changes the protocol and host of an URL with the protocol and host from the provided proxy URL. Also, adds the first segment of the path of the proxy URL.
+ * For example, https://ris.freiburg.de/oparl/System becomes http://localhost:8888/eli/oparl/System
+ * @param {string} originalUrl - URL that needs to be rewritten.
+ * @param {string} proxyUrl - URL of the proxy
+ * @returns {URL} URL object of the rewritten URL
+ */
+function rewriteLinkWithProxy(originalUrl: string, proxyUrl: string): URL {
+  const originalUrlObj = new URL(originalUrl);
+  const proxyUrlObj = new URL(proxyUrl);
+
+  // replace host
+  const protocol = proxyUrlObj.protocol;
+  const host = proxyUrlObj.host;
+  let firstSegment = '';
+  // host is the same when harvesting
+  if (host != originalUrlObj.host) {
+    firstSegment = `/${proxyUrlObj.pathname.split('/')[1]}`; // 'eli' or 'oparl'
+    console.log('first segment: ' + firstSegment);
+  }
+
+  const newUrl = new URL(originalUrl.toString());
+  newUrl.protocol = protocol;
+  newUrl.host = host;
+  newUrl.pathname = `${firstSegment}${originalUrlObj.pathname}`;
+  try {
+    console.log('new url: ' + newUrl.toString());
+    return newUrl;
+  } catch (error) {
+    console.error('Invalid URL:', originalUrl);
+    return originalUrlObj; // Fallback to the original URL if parsing fails
+  }
+}
+
+/**
+ * Removes the schema version from an Oparl schema URL string
+ * For example, https://schema.oparl.org/1.0/System becomes https://schema.oparl.org/System
+ * @param {string} url - Oparl schema URL 
+ * @returns {string} Oparl schema URL without version
+ */
+function removeVersionFromOparlSchemaUri(content: string): string {
+  return content.replaceAll(/(schema\.oparl\.org)\/\d+\.\d+(?=\/|$)/g, '$1');
 }
