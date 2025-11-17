@@ -6,13 +6,12 @@ import {
   STATUS_SCHEDULED,
   TASK_HARVESTING_OPARL,
 } from '../constants';
-import { createJob, createTask } from '../lib/task';
+import { createTask } from '../lib/task';
 
 const router = express.Router();
 
 router.post('/*', async (req, res) => {
   try {
-    //await createJob(TARGET_GRAPH, OPARL_ENDPOINT);
     await createTask(
       TARGET_GRAPH,
       '0',
