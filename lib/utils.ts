@@ -1,13 +1,14 @@
 import { convertOparlToEli } from './convert';
 import { Parser, Store } from 'n3';
 import { enrichOparlDataToJsonLd } from './enrich';
+import { LINK_TO_PUBLICATION_PREDICATE } from '../constants';
 
 /**
  * Fetch with logging and returning JSON
  * @param {string} oparlUrl - Oparl API URL 
  * @returns {object} JSON response
  */
-async function getOparlData(oparlUrl: string) {
+export async function getOparlData(oparlUrl: string) {
   const response = await fetch(oparlUrl);
   console.log('Sent Oparl request:', oparlUrl);
   if (!response.ok) throw new Error(`OParl request failed: ${response.status}`);
@@ -51,11 +52,13 @@ export function parseTurtleIntoStore(turtleData: string): Store {
 export function extractLinkToPublications(convertedOparlData) {
   const store = parseTurtleIntoStore(convertedOparlData);
 
-  // Define the predicate URI for lblod:linkToPublication
-  const predicate = 'http://lblod.data.gift/vocabularies/besluit/linkToPublication';
-
-  // Get all quads with that predicate
-  const matchingQuads = store.getQuads(null, predicate, null, null);
+  // Get all quads with the linkToPublication predicate
+  const matchingQuads = store.getQuads(
+    null,
+    LINK_TO_PUBLICATION_PREDICATE,
+    null,
+    null,
+  );
 
   return matchingQuads.map(quad => quad.object.value);
 }

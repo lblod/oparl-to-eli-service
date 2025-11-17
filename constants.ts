@@ -2,6 +2,7 @@ import env from 'env-var';
 import { isGeneratorObject } from 'util/types';
 
 export const OPARL_TO_ELI_SERVICE_URI = 'http://lblod.data.gift/services/oparl-to-eli-service';
+export const LINK_TO_PUBLICATION_PREDICATE = 'http://lblod.data.gift/vocabularies/besluit/linkToPublication';
 
 export const TASK_HARVESTING_OPARL =
   'http://lblod.data.gift/id/jobs/concept/TaskOperation/harvesting/oparl';
@@ -66,7 +67,7 @@ export const OPARL_JSON_LD_CONTEXT = {
       '@type': '@id',
       '@context': {
         linkToPublication: {
-          '@id': 'lblod:linkToPublication',
+          '@id': LINK_TO_PUBLICATION_PREDICATE,
           '@type': '@id',
         },
         next: 'linkToPublication',
