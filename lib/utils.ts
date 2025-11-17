@@ -26,7 +26,7 @@ export async function getEliData(
   oparlUrl: string,
   format: string,
   proxyUrl: string,
-  prefixes: Record<string, string>,
+  prefixes?: Record<string, string>,
 ) {
   let oparlData = await getOparlData(oparlUrl);
   oparlData = enrichOparlDataToJsonLd(oparlData, proxyUrl);

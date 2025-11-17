@@ -4,6 +4,9 @@ import { OPARL_ENDPOINT } from '../config';
 
 const router = express.Router();
 
+// Handle all GET requests to /eli/*
+// Example: /eli/oparl/body/FR/paper
+// This will proxy the request to the configured OParl endpoint and convert the response to ELI format
 router.get('/*', async (req: Request, res: Response) => {
   console.log('Received request:', req.params);
   try {
