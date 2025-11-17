@@ -1,5 +1,4 @@
 import env from 'env-var';
-import { isGeneratorObject } from 'util/types';
 
 export const OPARL_TO_ELI_SERVICE_URI = 'http://lblod.data.gift/services/oparl-to-eli-service';
 export const LINK_TO_PUBLICATION_PREDICATE = 'http://lblod.data.gift/vocabularies/besluit/linkToPublication';
