@@ -19,8 +19,8 @@ export async function convertOparlToEli(
     oparlStore.addQuad(quad);
   }
 
-  for (const constructQuery of SPARQL_CONSTRUCTS) {
-    const result = await engine.queryQuads(constructQuery, {
+  for (const { query } of SPARQL_CONSTRUCTS) {
+    const result = await engine.queryQuads(query, {
       sources: [oparlStore],
     });
     for await (const quad of result) {
