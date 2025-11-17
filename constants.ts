@@ -1,4 +1,5 @@
 import env from 'env-var';
+import { convertPrefixesObjectToSPARQLPrefixes } from './lib/utils';
 
 export const OPARL_TO_ELI_SERVICE_URI = 'http://lblod.data.gift/services/oparl-to-eli-service';
 export const LINK_TO_PUBLICATION_PREDICATE = 'http://lblod.data.gift/vocabularies/besluit/linkToPublication';
@@ -48,6 +49,8 @@ export const PREFIXES = {
   'eli': 'http://data.europa.eu/eli/ontology#',
   'eli-dl': 'http://data.europa.eu/eli/ontology/dl#',
   'xsd': 'http://www.w3.org/2001/XMLSchema#',
+  'oparl': 'https://schema.oparl.org/',
+  'epvoc': 'https://data.europarl.europa.eu/def/epvoc#',
 };
 
 export const OPARL_JSON_LD_CONTEXT = {
@@ -86,11 +89,7 @@ export const OPARL_JSON_LD_CONTEXT = {
 };
 
 export const SPARQL_CONSTRUCTS = [
-  `PREFIX oparl: <https://schema.oparl.org/>
-    PREFIX eli: <http://data.europa.eu/eli/ontology#>
-    PREFIX dcterms: <http://purl.org/dc/terms/>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-    PREFIX eli-dl: <http://data.europa.eu/eli/ontology/dl#>
+  `${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
 
     CONSTRUCT {
       ?paper a eli:Work ;
@@ -121,11 +120,7 @@ export const SPARQL_CONSTRUCTS = [
       }
       OPTIONAL { ?paper oparl:underDirectionOf ?contributor . }
     }`,
-  `PREFIX eli: <http://data.europa.eu/eli/ontology#>
-PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX epvoc: <https://data.europarl.europa.eu/def/epvoc#>
-PREFIX oparl: <https://schema.oparl.org/>
+  `${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
 
 CONSTRUCT {
   ?expression a eli:Expression ;
@@ -163,11 +158,7 @@ WHERE {
   BIND(xsd:dateTime(?modified) AS ?modifiedDT)
 }
   `,
-  `PREFIX oparl: <https://schema.oparl.org/>
-    PREFIX eli: <http://data.europa.eu/eli/ontology#>
-    PREFIX dcterms: <http://purl.org/dc/terms/>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-    PREFIX eli-dl: <http://data.europa.eu/eli/ontology/dl#>
+  `${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
 
     CONSTRUCT {
       ?consultation a eli-dl:Activity ;
@@ -185,11 +176,7 @@ WHERE {
               oparl:authoritative ?authoritative ;
               oparl:role ?role .
     }`,
-  `PREFIX oparl: <https://schema.oparl.org/>
-    PREFIX eli: <http://data.europa.eu/eli/ontology#>
-    PREFIX dcterms: <http://purl.org/dc/terms/>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-    PREFIX eli-dl: <http://data.europa.eu/eli/ontology/dl#>
+  `${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
 
     construct {
       ?s ?p ?o .
