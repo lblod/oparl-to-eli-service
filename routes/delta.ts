@@ -5,7 +5,7 @@ import { Delta } from '../lib/delta';
 
 const router = express.Router();
 
-router.post('/*', async function(req: Request, res: Response)  {
+router.post('/*', async function (req: Request, res: Response) {
   try {
     const entries = new Delta(req.body).getInsertsFor(
       'http://www.w3.org/ns/adms#status',

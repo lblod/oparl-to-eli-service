@@ -1,4 +1,4 @@
-import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
+import { updateSudo as update } from '@lblod/mu-auth-sudo';
 import { sparqlEscapeDateTime, sparqlEscapeUri, sparqlEscapeString } from 'mu';
 import { PREFIXES, STRING_LIMIT } from '../constants';
 import { Transform } from 'stream';
@@ -107,7 +107,8 @@ export function toTermObjectArray(triples, stringLimit = STRING_LIMIT) {
         return `${sparqlEscapeString(
           value.substring(0, stringLimit).toString(),
         )}^^${sparqlEscapeUri(datatype.id)}`;
-      else if (lang) return `${sparqlEscapeString(value.substring(0, stringLimit))}@${lang}`;
+      else if (lang)
+        return `${sparqlEscapeString(value.substring(0, stringLimit))}@${lang}`;
       else return `${sparqlEscapeString(value.substring(0, stringLimit))}`;
     } else
       console.log(

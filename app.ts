@@ -1,7 +1,7 @@
 import { app } from 'mu';
 import { ErrorRequestHandler } from 'express';
 import Router from 'express-promise-router';
-import bodyParser, { json } from 'body-parser';
+import bodyParser from 'body-parser';
 import oparlRoutes from './routes/oparl';
 import eliRoutes from './routes/eli';
 import testRoutes from './routes/test';

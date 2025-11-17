@@ -8,7 +8,7 @@ import {
 import { join } from 'path';
 import { mkdir } from 'fs/promises';
 import { writeFile, stat } from 'fs/promises';
-import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
+import { updateSudo as update } from '@lblod/mu-auth-sudo';
 import {
   MU_SPARQL_ENDPOINT,
   OPARL_TO_ELI_SERVICE_URI,

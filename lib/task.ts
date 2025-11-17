@@ -182,10 +182,12 @@ export async function createTask(
   const inputContainerUri = CONTAINER_URI_PREFIX + inputContainerId;
 
   const harvestCollectionId = uuidv4();
-  const harvestCollectionUri = HARVEST_COLLECTION_URI_PREFIX + harvestCollectionId;
+  const harvestCollectionUri =
+    HARVEST_COLLECTION_URI_PREFIX + harvestCollectionId;
 
   const remoteDataObjectId = uuidv4();
-  const remoteDataObjectUri = REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
+  const remoteDataObjectUri =
+    REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
 
   const jobTriples = `
         ${sparqlEscapeUri(jobUri)} a cogs:Job;
@@ -243,7 +245,8 @@ export async function createJob(graph, urlToHarvest) {
   const jobUri = JOB_URI_PREFIX + jobId;
 
   const remoteDataObjectId = uuidv4();
-  const remoteDataObjectUri = REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
+  const remoteDataObjectUri =
+    REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
 
   const jobTriples = `
         ${sparqlEscapeUri(jobUri)} a cogs:Job;

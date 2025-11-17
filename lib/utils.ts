@@ -5,7 +5,7 @@ import { LINK_TO_PUBLICATION_PREDICATE } from '../constants';
 
 /**
  * Fetch with logging and returning JSON
- * @param {string} oparlUrl - Oparl API URL 
+ * @param {string} oparlUrl - Oparl API URL
  * @returns {object} JSON response
  */
 export async function getOparlData(oparlUrl: string) {
@@ -60,7 +60,7 @@ export function extractLinkToPublications(convertedOparlData) {
     null,
   );
 
-  return matchingQuads.map(quad => quad.object.value);
+  return matchingQuads.map((quad) => quad.object.value);
 }
 
 /**
@@ -94,7 +94,9 @@ export function parseResult(result) {
   });
 }
 
-export function convertPrefixesObjectToSPARQLPrefixes(prefixesObj: Record<string, string>): string {
+export function convertPrefixesObjectToSPARQLPrefixes(
+  prefixesObj: Record<string, string>,
+): string {
   let prefixesStr = '';
   for (const [prefix, uri] of Object.entries(prefixesObj)) {
     prefixesStr += `PREFIX ${prefix}: <${uri}>\n`;

@@ -58,22 +58,22 @@ function addLinkToPublications(dataBlock, linksBlock, proxyUrl: string) {
 }
 
 function handleSystemLinks(item, linksBlock, proxyUrl) {
-  if (item.type.endsWith("System") && item.body) {
-    rewriteAndAssign(item.body, linksBlock, "body", proxyUrl);
+  if (item.type.endsWith('System') && item.body) {
+    rewriteAndAssign(item.body, linksBlock, 'body', proxyUrl);
   }
 }
 
 function handleBodyLinks(item, linksBlock, proxyUrl) {
-  if (!item.type.endsWith("Body")) return;
+  if (!item.type.endsWith('Body')) return;
 
-  rewriteAndAssign(item.organization, linksBlock, "organization", proxyUrl);
-  rewriteAndAssign(item.person, linksBlock, "person", proxyUrl);
-  rewriteAndAssign(item.meeting, linksBlock, "meeting", proxyUrl);
-  rewriteAndAssign(item.paper, linksBlock, "paper", proxyUrl);
+  rewriteAndAssign(item.organization, linksBlock, 'organization', proxyUrl);
+  rewriteAndAssign(item.person, linksBlock, 'person', proxyUrl);
+  rewriteAndAssign(item.meeting, linksBlock, 'meeting', proxyUrl);
+  rewriteAndAssign(item.paper, linksBlock, 'paper', proxyUrl);
 }
 
 function handleMeetingLinks(dataBlock, linksBlock, proxyUrl) {
-  if (!dataBlock[0].type.endsWith("Meeting")) return;
+  if (!dataBlock[0].type.endsWith('Meeting')) return;
 
   for (const meeting of dataBlock) {
     if (!meeting.agendaItem) continue;
@@ -136,7 +136,7 @@ function rewriteLinkWithProxy(originalUrl: string, proxyUrl: string): URL {
 /**
  * Removes the schema version from an Oparl schema URL string
  * For example, https://schema.oparl.org/1.0/System becomes https://schema.oparl.org/System
- * @param {string} url - Oparl schema URL 
+ * @param {string} url - Oparl schema URL
  * @returns {string} Oparl schema URL without version
  */
 function removeVersionFromOparlSchemaUri(content: string): string {
