@@ -16,10 +16,12 @@ export function enrichOparlDataToJsonLd(oparlData, proxyUrl: string) {
   addExistingPaginationLinks(oparlData, oparlData['links'], proxyUrl);
 
   // Enrich original response with JSON-LD context
-  if (!EMBED_JSONLD_CONTEXT)
+  if (EMBED_JSONLD_CONTEXT) {
+    oparlData['@context'] = OPARL_JSON_LD_CONTEXT['@context']
+  } else {
     oparlData['@context'] =
       `${new URL(proxyUrl).protocol}://${new URL(proxyUrl).host}/context.json`;
-  else oparlData['@context'] = OPARL_JSON_LD_CONTEXT['@context'];
+  }
 
   // Remove version from schema URIs
   const oparlDataWithoutVersion = JSON.parse(
