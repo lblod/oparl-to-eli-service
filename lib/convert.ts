@@ -19,9 +19,12 @@ export async function convertOparlToEli(
     oparlStore.addQuad(quad);
   }
 
+  // An OParl object can embed other OParl resources (e.g. a Paper can embed its Files)
+  // Therefore, we execute multiple SPARQL CONSTRUCT queries on an OParl response and merge the triples in a store
+  // A store is also needed to prevent writing multiple times the same triple in the N3 Writer
   for (const { query } of SPARQL_CONSTRUCTS) {
     const result = await engine.queryQuads(query, {
-      sources: [oparlStore],
+      sources: [{ type: 'rdfjs', value: oparlStore }],
     });
     for await (const quad of result) {
       eliStore.addQuad(quad);
