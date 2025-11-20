@@ -1,3 +1,7 @@
+// This file is a copy from repository https://github.com/lblod/poc-decide-harvester-publish-service
+// Extended with insertFromTurtleIntoGraph function
+// courtesy: Nordine Bittich
+
 import { updateSudo as update } from '@lblod/mu-auth-sudo';
 import { sparqlEscapeDateTime, sparqlEscapeUri, sparqlEscapeString } from 'mu';
 import { PREFIXES, STRING_LIMIT } from '../constants';
@@ -315,6 +319,18 @@ export async function deleteFromGraph(
     extraHeaders,
   );
 }
+
+/**
+ * Insert a string in Turtle format in a triple store 
+ * Uses RDF/JS Store to generate SPARQL query
+ *
+ * @param {Array} turtle String in Turtle format
+ * @param {string} dbEndpoint SPARQL endpoint URL
+ * @param {string} graph Target graph URI
+ * @param {object} extraHeaders Extra headers to add to the request
+ * @method insertFromTurtleIntoGraph
+ * courtesy: Brecht Van de Vyvere
+ */
 export async function insertFromTurtleIntoGraph(
   turtle,
   dbEndpoint,
