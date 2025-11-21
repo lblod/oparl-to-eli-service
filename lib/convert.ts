@@ -1,7 +1,7 @@
 import ParserJsonld from '@rdfjs/parser-jsonld';
 import { Store, Writer } from 'n3';
 import { Readable } from 'stream';
-import { QueryEngine } from '@comunica/query-sparql';
+import { QueryEngine } from '@comunica/query-sparql-rdfjs-lite';
 const engine = new QueryEngine();
 
 import { PREFIXES, SPARQL_CONSTRUCTS } from '../constants';

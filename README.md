@@ -98,3 +98,26 @@ The task model described in the [job-controller-service](https://github.com/lblo
 
 To test ELI mappings with SPARQL constructs, you can use the [Comunica UI](https://query.comunica.dev/#datasources=http%3A%2F%2Flocalhost%3A8888%2Foparl%2Foparl%2Fbody%2FFR%2Fpaper&query=PREFIX%20example%3A%20%3Chttp%3A%2F%2Fwww.example.org%2Frdf%23%3E%0Aconstruct%20%7B%0A%20%20%3Fs%20a%20example%3AThing%20.%0A%7D%0Awhere%20%7B%0A%20%20%3Fs%20a%20%3Chttps%3A%2F%2Fschema.oparl.org%2FPaper%3E%20.%0A%7D).
 The OPARL endpoint in JSON-LD is used as data source to test the ELI mapping.
+
+## Export data
+
+Example SPARQL query:
+```
+prefix eli: <http://data.europa.eu/eli/ontology#>
+prefix dct: <http://purl.org/dc/terms/>
+
+select ?work ?title ?url
+where {
+?work a eli:Work ;
+dct:title ?title ;
+eli:is_realized_by/eli:is_embodied_by ?manifestation .
+
+?manifestation eli:is_exemplified_by ?url .
+}
+LIMIT 1000
+```
+
+```
+curl 'http://localhost:8891/sparql/?default-graph-uri=&query=prefix+eli%3A+%3Chttp%3A%2F%2Fdata.europa.eu%2Feli%2Fontology%23%3E%0D%0Aprefix+dct%3A+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Fterms%2F%3E%0D%0A%0D%0Aselect+%3Fwork+%3Ftitle+%3Furl%0D%0Awhere+%7B%0D%0A%3Fwork+a+eli%3AWork+%3B%0D%0Adct%3Atitle+%3Ftitle+%3B%0D%0Aeli%3Ais_realized_by%2Feli%3Ais_embodied_by+%3Fmanifestation+.%0D%0A%0D%0A%3Fmanifestation+eli%3Ais_exemplified_by+%3Furl+.%0D%0A%7D%0D%0ALIMIT+1000&format=text%2Fhtml&should-sponge=&timeout=0&signal_void=on' \
+  -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7' \
+```
