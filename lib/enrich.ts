@@ -17,7 +17,7 @@ export function enrichOparlDataToJsonLd(oparlData, proxyUrl: string) {
 
   // Enrich original response with JSON-LD context
   if (EMBED_JSONLD_CONTEXT) {
-    oparlData['@context'] = OPARL_JSON_LD_CONTEXT['@context']
+    oparlData['@context'] = OPARL_JSON_LD_CONTEXT['@context'];
   } else {
     oparlData['@context'] =
       `${new URL(proxyUrl).protocol}://${new URL(proxyUrl).host}/context.json`;

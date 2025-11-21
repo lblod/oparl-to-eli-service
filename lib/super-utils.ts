@@ -321,7 +321,7 @@ export async function deleteFromGraph(
 }
 
 /**
- * Insert a string in Turtle format in a triple store 
+ * Insert a string in Turtle format in a triple store
  * Uses RDF/JS Store to generate SPARQL query
  *
  * @param {Array} turtle String in Turtle format
