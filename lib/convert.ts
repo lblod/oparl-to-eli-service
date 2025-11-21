@@ -9,7 +9,6 @@ import { PREFIXES, SPARQL_CONSTRUCTS } from '../constants';
 export async function convertOparlToEli(
   oparlData,
   format: string = 'text/turtle',
-  prefixes: Record<string, string> = PREFIXES,
 ) {
   const oparlStore = new Store();
   const eliStore = new Store();
@@ -32,7 +31,7 @@ export async function convertOparlToEli(
   }
   const writer = new Writer({
     format,
-    prefixes: prefixes,
+    prefixes: PREFIXES,
   });
   for await (const quad of eliStore) {
     writer.addQuad(quad);
