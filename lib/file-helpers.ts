@@ -12,9 +12,8 @@ import { updateSudo as update } from '@lblod/mu-auth-sudo';
 import {
   MU_SPARQL_ENDPOINT,
   OPARL_TO_ELI_SERVICE_URI,
-  PREFIXES,
+  PREFIXES_SPARQL,
 } from '../constants';
-import { convertPrefixesObjectToSPARQLPrefixes } from './utils';
 const connectionOptions = {
   sparqlEndpoint: MU_SPARQL_ENDPOINT,
   mayRetry: true,
@@ -68,7 +67,7 @@ export async function writeFileToTriplestore(
 
     // prettier-ignore
     await update(`
-        ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+        ${PREFIXES_SPARQL}
         INSERT DATA {
           GRAPH ${sparqlEscapeUri(graph)} {
             ${sparqlEscapeUri(physicalFile)} a nfo:FileDataObject;

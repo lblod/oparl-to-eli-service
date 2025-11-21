@@ -9,7 +9,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
 import {
   TASK_TYPE,
-  PREFIXES,
   STATUS_BUSY,
   STATUS_FAILED,
   ERROR_URI_PREFIX,
@@ -24,15 +23,16 @@ import {
   OPARL_TO_ELI_SERVICE_URI,
   JOB_HARVESTING_OPARL,
   STATUS_SCHEDULED,
+  PREFIXES_SPARQL,
 } from '../constants';
-import { convertPrefixesObjectToSPARQLPrefixes, parseResult } from './utils';
+import { parseResult } from './utils';
 const connectionOptions = {
   sparqlEndpoint: MU_SPARQL_ENDPOINT,
   mayRetry: true,
 };
 export async function failBusyImportTasks() {
   const queryStr = `
-      ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+      ${PREFIXES_SPARQL}
       DELETE {
         GRAPH ?g {
           ?task adms:status ${sparqlEscapeUri(STATUS_BUSY)} .
@@ -69,7 +69,7 @@ export async function failBusyImportTasks() {
 
 export async function isTask(subject) {
   const queryStr = `
-     ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+     ${PREFIXES_SPARQL}
      SELECT ?subject WHERE {
       GRAPH ?g {
         BIND(${sparqlEscapeUri(subject)} as ?subject)
@@ -84,7 +84,7 @@ export async function isTask(subject) {
 
 export async function loadCollectingTask(subject) {
   const queryTask = `
-     ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+     ${PREFIXES_SPARQL}
      SELECT DISTINCT ?graph ?task ?id ?job ?created ?modified ?status ?index ?operation ?error ?url WHERE {
       GRAPH ?graph {
         BIND(${sparqlEscapeUri(subject)} as ?task)
@@ -119,7 +119,7 @@ export async function loadCollectingTask(subject) {
 export async function updateTaskStatus(task, status) {
   await update(
     `
-      ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+      ${PREFIXES_SPARQL}
       DELETE {
         GRAPH ?g {
           ?subject adms:status ?status .
@@ -150,7 +150,7 @@ export async function appendTaskError(task, errorMsg) {
   const uri = ERROR_URI_PREFIX + id;
 
   const queryError = `
-      ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+      ${PREFIXES_SPARQL}
      INSERT DATA {
       GRAPH ${sparqlEscapeUri(task.graph)}{
         ${sparqlEscapeUri(uri)} a ${sparqlEscapeUri(ERROR_TYPE)};
@@ -190,7 +190,7 @@ export async function createTask(
     REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
 
   const jobTriples = `
-        ${sparqlEscapeUri(jobUri)} a cogs:Job;
+        ${sparqlEscapeUri(jobUri)}  
           mu:uuid ${sparqlEscapeString(jobId)} ;
           dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)} ;
           adms:status ${sparqlEscapeUri(STATUS_BUSY)} ;
@@ -214,7 +214,7 @@ export async function createTask(
   `;
 
   const insertQuery = `
-    ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+    ${PREFIXES_SPARQL}
     INSERT DATA {
       GRAPH ${sparqlEscapeUri(graph)} {
        ${sparqlEscapeUri(taskUri)} a ${sparqlEscapeUri(TASK_TYPE)};
@@ -264,7 +264,7 @@ export async function createJob(graph, urlToHarvest) {
   `;
 
   const insertQuery = `
-    ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+    ${PREFIXES_SPARQL}
     INSERT DATA {
       GRAPH ${sparqlEscapeUri(graph)} {
         ${jobTriples}

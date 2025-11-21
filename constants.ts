@@ -67,6 +67,8 @@ export const PREFIXES = {
   epvoc: 'https://data.europarl.europa.eu/def/epvoc#',
 };
 
+export const PREFIXES_SPARQL = convertPrefixesObjectToSPARQLPrefixes(PREFIXES);
+
 export const OPARL_JSON_LD_CONTEXT = {
   '@context': {
     '@vocab': 'https://schema.oparl.org/',
@@ -105,7 +107,7 @@ export const OPARL_JSON_LD_CONTEXT = {
 export const SPARQL_CONSTRUCTS = [
   {
     name: 'Paper',
-    query: `${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+    query: `${PREFIXES_SPARQL}
             CONSTRUCT {
               ?paper a eli:Work ;
                       dcterms:title ?title ;
@@ -138,7 +140,7 @@ export const SPARQL_CONSTRUCTS = [
   },
   {
     name: 'File',
-    query: `${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+    query: `${PREFIXES_SPARQL}
               CONSTRUCT {
                 ?expression a eli:Expression ;
                   eli:title ?titleLang ;
@@ -177,7 +179,7 @@ export const SPARQL_CONSTRUCTS = [
   },
   {
     name: 'Consultation',
-    query: `${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+    query: `${PREFIXES_SPARQL}
               CONSTRUCT {
                 ?consultation a eli-dl:Activity ;
                   eli-dl:based_on_a_realization_of ?paper ;
@@ -197,7 +199,7 @@ export const SPARQL_CONSTRUCTS = [
   },
   {
     name: 'others',
-    query: `${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+    query: `${PREFIXES_SPARQL}
               CONSTRUCT {
                 ?s ?p ?o .
               }

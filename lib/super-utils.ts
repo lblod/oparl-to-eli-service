@@ -4,16 +4,13 @@
 
 import { updateSudo as update } from '@lblod/mu-auth-sudo';
 import { sparqlEscapeDateTime, sparqlEscapeUri, sparqlEscapeString } from 'mu';
-import { PREFIXES, STRING_LIMIT } from '../constants';
+import { PREFIXES_SPARQL, STRING_LIMIT } from '../constants';
 import { Transform } from 'stream';
 import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
 import fetch from 'node-fetch';
 import { readFile } from 'fs/promises';
-import {
-  convertPrefixesObjectToSPARQLPrefixes,
-  parseTurtleIntoStore,
-} from './utils';
+import { parseTurtleIntoStore } from './utils';
 export const HTTP_MAX_QUERY_SIZE_BYTES = parseInt(
   process.env.HTTP_MAX_QUERY_SIZE_BYTES || '60000',
 ); // 60kb by default
@@ -35,7 +32,7 @@ export function chunk(array, chunkSize) {
 export async function updateStatus(subject, status) {
   const modified = new Date();
   const q = `
-    ${convertPrefixesObjectToSPARQLPrefixes(PREFIXES)}
+    ${PREFIXES_SPARQL}
 
     DELETE {
       GRAPH ?g {
