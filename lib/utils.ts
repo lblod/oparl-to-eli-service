@@ -1,51 +1,11 @@
 import { convertOparlToEli } from './convert';
 import { Parser, Store } from 'n3';
 import { enrichOparlDataToJsonLd } from './enrich';
-
-/**
- * Changes the protocol and host of an URL with the protocol and host from the provided proxy URL. Also, adds the first segment of the path of the proxy URL.
- * For example, https://ris.freiburg.de/oparl/System becomes http://localhost:8888/eli/oparl/System
- * @param {string} originalUrl - URL that needs to be rewritten.
- * @param {string} proxyUrl - URL of the proxy
- * @returns {URL} URL object of the rewritten URL
- */
-export function rewriteLinkWithProxy(originalUrl: string, proxyUrl: string): URL {
-  const originalUrlObj = new URL(originalUrl);
-  const proxyUrlObj = new URL(proxyUrl);
-
-  // replace host
-  const protocol = proxyUrlObj.protocol;
-  const host = proxyUrlObj.host;
-  let firstSegment = proxyUrlObj.toString().split('/')[1]; // 'eli' or 'oparl' or '' in harvesting
-  console.log('first segment: ' + firstSegment);
-  if (firstSegment != '') firstSegment = `/${firstSegment}`;
-
-  const newUrl = new URL(originalUrl.toString());
-  newUrl.protocol = protocol;
-  newUrl.host = host;
-  newUrl.pathname = `${firstSegment}${originalUrlObj.pathname}`;
-  try {
-    console.log('new url: ' + newUrl.toString());
-    return newUrl;
-  } catch (error) {
-    console.error('Invalid URL:', originalUrl);
-    return originalUrlObj; // Fallback to the original URL if parsing fails
-  }
-}
-
-/**
- * Removes the schema version from an Oparl schema URL string
- * For example, https://schema.oparl.org/1.0/System becomes https://schema.oparl.org/System
- * @param {string} url - Oparl schema URL 
- * @returns {string} Oparl schema URL without version
- */
-export function removeVersionFromOparlSchemaUri(url: string): string {
-  return url.replaceAll(/(schema\.oparl\.org)\/\d+\.\d+(?=\/|$)/g, '$1');
-}
+import { LINK_TO_PUBLICATION_PREDICATE } from '../constants';
 
 /**
  * Fetch with logging and returning JSON
- * @param {string} oparlUrl - Oparl API URL 
+ * @param {string} oparlUrl - Oparl API URL
  * @returns {object} JSON response
  */
 export async function getOparlData(oparlUrl: string) {
@@ -73,26 +33,33 @@ export async function getEliData(
   return oparlData;
 }
 
+export function parseTurtleIntoStore(turtleData: string): Store {
+  const parser = new Parser({ format: 'text/turtle' });
+  const store = new Store();
+
+  // Parse the Turtle data into quads
+  const quads = parser.parse(turtleData);
+  store.addQuads(quads);
+
+  return store;
+}
 /**
  * Extracts all URLs from quads with predicate lblod:linkToPublication from Turtle data.
  * @param {string} convertedOparlData - RDF data in Turtle syntax.
  * @returns {Array} Array of linkToPublication URLs.
  */
 export function extractLinkToPublications(convertedOparlData) {
-  const parser = new Parser({ format: 'text/turtle' });
-  const store = new Store();
+  const store = parseTurtleIntoStore(convertedOparlData);
 
-  // Parse the Turtle data into quads
-  const quads = parser.parse(convertedOparlData);
-  store.addQuads(quads);
+  // Get all quads with the linkToPublication predicate
+  const matchingQuads = store.getQuads(
+    null,
+    LINK_TO_PUBLICATION_PREDICATE,
+    null,
+    null,
+  );
 
-  // Define the predicate URI for lblod:linkToPublication
-  const predicate = 'http://lblod.data.gift/vocabularies/besluit/linkToPublication';
-
-  // Get all quads with that predicate
-  const matchingQuads = store.getQuads(null, predicate, null, null);
-
-  return matchingQuads.map(quad => quad.object.value);
+  return matchingQuads.map((quad) => quad.object.value);
 }
 
 /**
@@ -126,3 +93,12 @@ export function parseResult(result) {
   });
 }
 
+export function convertPrefixesObjectToSPARQLPrefixes(
+  prefixesObj: Record<string, string>,
+): string {
+  let prefixesStr = '';
+  for (const [prefix, uri] of Object.entries(prefixesObj)) {
+    prefixesStr += `PREFIX ${prefix}: <${uri}>\n`;
+  }
+  return prefixesStr;
+}

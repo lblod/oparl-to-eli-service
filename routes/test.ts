@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 
 import { OPARL_ENDPOINT } from '../config';
 import {
@@ -6,19 +6,18 @@ import {
   STATUS_SCHEDULED,
   TASK_HARVESTING_OPARL,
 } from '../constants';
-import { createJob, createTask } from '../lib/task';
+import { createTask } from '../lib/task';
 
 const router = express.Router();
 
 router.post('/*', async (req, res) => {
   try {
-    //await createJob(TARGET_GRAPH, OPARL_ENDPOINT);
     await createTask(
       TARGET_GRAPH,
       '0',
       TASK_HARVESTING_OPARL,
       STATUS_SCHEDULED,
-      OPARL_ENDPOINT,
+      `${OPARL_ENDPOINT}`,
     );
     res.status(200).json({
       message: `Test Oparl harvesting task created to Oparl endpoint: ${OPARL_ENDPOINT}`,

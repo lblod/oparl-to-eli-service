@@ -1,6 +1,6 @@
 {
   "name": "oparl-to-eli-service",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Service that scrapes an OParl API",
   "main": "app.ts",
   "scripts": {
@@ -31,7 +31,7 @@
     "prettier": "^3.0.0"
   },
   "dependencies": {
-    "@comunica/query-sparql": "^4.4.1",
+    "@comunica/query-sparql-rdfjs-lite": "^4.5.0",
     "@lblod/mu-auth-sudo": "^0.6.2",
     "@rdfjs/data-model": "^2.1.1",
     "@rdfjs/parser-jsonld": "^2.1.3",

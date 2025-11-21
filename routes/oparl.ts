@@ -6,6 +6,9 @@ import { enrichOparlDataToJsonLd } from '../lib/enrich';
 
 const router = express.Router();
 
+// Handle all GET requests to /oparl/*
+// Example: /oparl/oparl/body/FR/paper
+// This will proxy the request to the configured OParl endpoint and convert the response to JSON-LD format
 router.get('/*', async (req: Request, res: Response) => {
   console.log('Received request:', req.params);
   try {

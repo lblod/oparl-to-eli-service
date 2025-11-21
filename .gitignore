@@ -4,3 +4,4 @@ node_modules
 dist
 .vscode
 docker-compose.override.yml
+.DS_Store

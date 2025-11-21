@@ -9,7 +9,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { querySudo as query, updateSudo as update } from '@lblod/mu-auth-sudo';
 import {
   TASK_TYPE,
-  PREFIXES,
   STATUS_BUSY,
   STATUS_FAILED,
   ERROR_URI_PREFIX,
@@ -23,8 +22,8 @@ import {
   JOB_URI_PREFIX,
   OPARL_TO_ELI_SERVICE_URI,
   JOB_HARVESTING_OPARL,
-  IMPORT_GRAPH_URI_PREFIX,
   STATUS_SCHEDULED,
+  PREFIXES_SPARQL,
 } from '../constants';
 import { parseResult } from './utils';
 const connectionOptions = {
@@ -33,10 +32,7 @@ const connectionOptions = {
 };
 export async function failBusyImportTasks() {
   const queryStr = `
-      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-      PREFIX adms: <http://www.w3.org/ns/adms#>
-      PREFIX dct: <http://purl.org/dc/terms/>
-      PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
+      ${PREFIXES_SPARQL}
       DELETE {
         GRAPH ?g {
           ?task adms:status ${sparqlEscapeUri(STATUS_BUSY)} .
@@ -70,25 +66,25 @@ export async function failBusyImportTasks() {
     );
   }
 }
-  
+
 export async function isTask(subject) {
-  //TODO: move to ask query
   const queryStr = `
-     ${PREFIXES}
+     ${PREFIXES_SPARQL}
      SELECT ?subject WHERE {
       GRAPH ?g {
         BIND(${sparqlEscapeUri(subject)} as ?subject)
         ?subject a ${sparqlEscapeUri(TASK_TYPE)}.
       }
      }
+     LIMIT 1
     `;
   const result = await query(queryStr);
   return result.results.bindings.length;
 }
-  
+
 export async function loadCollectingTask(subject) {
   const queryTask = `
-     ${PREFIXES}
+     ${PREFIXES_SPARQL}
      SELECT DISTINCT ?graph ?task ?id ?job ?created ?modified ?status ?index ?operation ?error ?url WHERE {
       GRAPH ?graph {
         BIND(${sparqlEscapeUri(subject)} as ?task)
@@ -119,13 +115,11 @@ export async function loadCollectingTask(subject) {
   if (!task) return null;
   return task;
 }
-  
+
 export async function updateTaskStatus(task, status) {
   await update(
     `
-      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-      PREFIX adms: <http://www.w3.org/ns/adms#>
-      PREFIX dct: <http://purl.org/dc/terms/>
+      ${PREFIXES_SPARQL}
       DELETE {
         GRAPH ?g {
           ?subject adms:status ?status .
@@ -150,13 +144,13 @@ export async function updateTaskStatus(task, status) {
     { mayRetry: true },
   );
 }
-  
+
 export async function appendTaskError(task, errorMsg) {
   const id = uuid();
   const uri = ERROR_URI_PREFIX + id;
-  
+
   const queryError = `
-     ${PREFIXES}
+      ${PREFIXES_SPARQL}
      INSERT DATA {
       GRAPH ${sparqlEscapeUri(task.graph)}{
         ${sparqlEscapeUri(uri)} a ${sparqlEscapeUri(ERROR_TYPE)};
@@ -166,7 +160,7 @@ export async function appendTaskError(task, errorMsg) {
       }
      }
     `;
-  
+
   await update(queryError, {}, { mayRetry: true });
 }
 
@@ -188,13 +182,15 @@ export async function createTask(
   const inputContainerUri = CONTAINER_URI_PREFIX + inputContainerId;
 
   const harvestCollectionId = uuidv4();
-  const harvestCollectionUri = HARVEST_COLLECTION_URI_PREFIX + harvestCollectionId;
+  const harvestCollectionUri =
+    HARVEST_COLLECTION_URI_PREFIX + harvestCollectionId;
 
   const remoteDataObjectId = uuidv4();
-  const remoteDataObjectUri = REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
+  const remoteDataObjectUri =
+    REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
 
   const jobTriples = `
-        ${sparqlEscapeUri(jobUri)} a cogs:Job;
+        ${sparqlEscapeUri(jobUri)}  
           mu:uuid ${sparqlEscapeString(jobId)} ;
           dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)} ;
           adms:status ${sparqlEscapeUri(STATUS_BUSY)} ;
@@ -218,7 +214,7 @@ export async function createTask(
   `;
 
   const insertQuery = `
-    ${PREFIXES}
+    ${PREFIXES_SPARQL}
     INSERT DATA {
       GRAPH ${sparqlEscapeUri(graph)} {
        ${sparqlEscapeUri(taskUri)} a ${sparqlEscapeUri(TASK_TYPE)};
@@ -249,7 +245,8 @@ export async function createJob(graph, urlToHarvest) {
   const jobUri = JOB_URI_PREFIX + jobId;
 
   const remoteDataObjectId = uuidv4();
-  const remoteDataObjectUri = REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
+  const remoteDataObjectUri =
+    REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
 
   const jobTriples = `
         ${sparqlEscapeUri(jobUri)} a cogs:Job;
@@ -267,7 +264,7 @@ export async function createJob(graph, urlToHarvest) {
   `;
 
   const insertQuery = `
-    ${PREFIXES}
+    ${PREFIXES_SPARQL}
     INSERT DATA {
       GRAPH ${sparqlEscapeUri(graph)} {
         ${jobTriples}
@@ -281,7 +278,6 @@ export async function createJob(graph, urlToHarvest) {
 }
 
 export async function appendTaskResultFile(task, container, fileUri) {
-  // prettier-ignore
   const queryStr = `
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
@@ -301,7 +297,6 @@ export async function appendTaskResultFile(task, container, fileUri) {
 }
 
 export async function appendTaskResultGraph(task, container, graphUri) {
-  // prettier-ignore
   const queryStr = `
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
