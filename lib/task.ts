@@ -24,6 +24,7 @@ import {
   JOB_HARVESTING_OPARL,
   STATUS_SCHEDULED,
   PREFIXES_SPARQL,
+  JOB_TYPE,
 } from '../constants';
 import { parseResult } from './utils';
 const connectionOptions = {
@@ -190,7 +191,7 @@ export async function createTask(
     REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
 
   const jobTriples = `
-        ${sparqlEscapeUri(jobUri)}  
+        ${sparqlEscapeUri(jobUri)} a ${sparqlEscapeUri(JOB_TYPE)} ;
           mu:uuid ${sparqlEscapeString(jobId)} ;
           dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)} ;
           adms:status ${sparqlEscapeUri(STATUS_BUSY)} ;
