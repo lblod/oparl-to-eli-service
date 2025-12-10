@@ -61,7 +61,7 @@ export const PREFIXES = {
   nfo: 'http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#',
   dbpedia: 'http://dbpedia.org/ontology/',
   eli: 'http://data.europa.eu/eli/ontology#',
-  'eli-dl': 'http://data.europa.eu/eli/ontology/dl#',
+  'eli-dl': 'http://data.europa.eu/eli/eli-draft-legislation-ontology#',
   xsd: 'http://www.w3.org/2001/XMLSchema#',
   oparl: 'https://schema.oparl.org/',
   epvoc: 'https://data.europarl.europa.eu/def/epvoc#',
