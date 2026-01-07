@@ -171,7 +171,7 @@ export async function createTask(
   operation,
   status,
   urlToHarvest,
-  jobUri?
+  jobUri?,
 ) {
   const taskId = uuidv4();
   const taskUri = TASK_URI_PREFIX + taskId;
