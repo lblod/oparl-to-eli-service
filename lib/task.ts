@@ -171,13 +171,26 @@ export async function createTask(
   operation,
   status,
   urlToHarvest,
+  jobUri?,
 ) {
   const taskId = uuidv4();
   const taskUri = TASK_URI_PREFIX + taskId;
   const created = new Date();
 
-  const jobId = uuidv4();
-  const jobUri = JOB_URI_PREFIX + jobId;
+  let jobTriples = '';
+  if (!jobUri) {
+    const jobId = uuidv4();
+    jobUri = JOB_URI_PREFIX + jobId;
+    jobTriples = `
+        ${sparqlEscapeUri(jobUri)} a ${sparqlEscapeUri(JOB_TYPE)} ;
+          mu:uuid ${sparqlEscapeString(jobId)} ;
+          dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)} ;
+          adms:status ${sparqlEscapeUri(STATUS_BUSY)} ;
+          dct:created ${sparqlEscapeDateTime(created)};
+          dct:modified ${sparqlEscapeDateTime(created)} ;
+          task:operation ${sparqlEscapeUri(JOB_HARVESTING_OPARL)} .
+  `;
+  }
 
   const inputContainerId = uuidv4();
   const inputContainerUri = CONTAINER_URI_PREFIX + inputContainerId;
@@ -190,15 +203,6 @@ export async function createTask(
   const remoteDataObjectUri =
     REMOTE_DATA_OBJECT_URI_PREFIX + remoteDataObjectId;
 
-  const jobTriples = `
-        ${sparqlEscapeUri(jobUri)} a ${sparqlEscapeUri(JOB_TYPE)} ;
-          mu:uuid ${sparqlEscapeString(jobId)} ;
-          dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)} ;
-          adms:status ${sparqlEscapeUri(STATUS_BUSY)} ;
-          dct:created ${sparqlEscapeDateTime(created)};
-          dct:modified ${sparqlEscapeDateTime(created)} ;
-          task:operation ${sparqlEscapeUri(JOB_HARVESTING_OPARL)} .
-  `;
   const inputContainerTriples = `
     ${sparqlEscapeUri(inputContainerUri)} a nfo:DataContainer ;
         task:hasHarvestingCollection ${sparqlEscapeUri(harvestCollectionUri)} ;

@@ -69,6 +69,7 @@ export async function run(taskUri) {
         TASK_HARVESTING_OPARL,
         STATUS_SCHEDULED,
         linkToPublication,
+        task.job,
       );
     }
 
