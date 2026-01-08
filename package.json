@@ -1,6 +1,6 @@
 {
   "name": "oparl-to-eli-service",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Service that scrapes an OParl API",
   "main": "app.ts",
   "scripts": {
