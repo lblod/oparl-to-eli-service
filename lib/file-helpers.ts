@@ -90,6 +90,8 @@ export async function writeFileToTriplestore(
                                     dct:format "${contentType}";
                                     nfo:fileSize ${sparqlEscapeInt(fileSize)};
                                     dbpedia:fileExtension "${extension}" .
+
+            ${sparqlEscapeUri(sourceFile)} nie:url ${sparqlEscapeUri(sourceFile)};
           }
         }
   `, {}, connectionOptions);

@@ -33,12 +33,15 @@ export async function getEliData(
   return oparlData;
 }
 
-export function parseTurtleIntoStore(turtleData: string): Store {
-  const parser = new Parser({ format: 'text/turtle' });
+export function parseStringIntoStore(
+  data: string,
+  format: string = 'text/turtle',
+): Store {
+  const parser = new Parser({ format: format });
   const store = new Store();
 
   // Parse the Turtle data into quads
-  const quads = parser.parse(turtleData);
+  const quads = parser.parse(data);
   store.addQuads(quads);
 
   return store;
@@ -49,7 +52,7 @@ export function parseTurtleIntoStore(turtleData: string): Store {
  * @returns {Array} Array of linkToPublication URLs.
  */
 export function extractLinkToPublications(convertedOparlData) {
-  const store = parseTurtleIntoStore(convertedOparlData);
+  const store = parseStringIntoStore(convertedOparlData);
 
   // Get all quads with the linkToPublication predicate
   const matchingQuads = store.getQuads(

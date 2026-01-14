@@ -19,7 +19,7 @@ import {
 } from './task';
 import { extractLinkToPublications, getEliData } from './utils';
 import { writeFileToTriplestore } from './file-helpers';
-import { insertFromTurtleIntoGraph } from './super-utils';
+import { insertFromStringIntoGraph } from './super-utils';
 
 export async function run(taskUri) {
   const task = await loadCollectingTask(taskUri);
@@ -34,9 +34,10 @@ export async function run(taskUri) {
     fileContainer.uri = `http://redpencil.data.gift/id/dataContainers/${fileContainer.id}`;
 
     // Get ELI response from OParl URL in the task
+    // Must be n-triples, because diff service and mu-auth expect this
     const convertedOparlData = await getEliData(
       task.url,
-      'text/turtle',
+      'application/n-triples',
       task.url,
     );
 
@@ -44,15 +45,16 @@ export async function run(taskUri) {
     const fileResult = await writeFileToTriplestore(
       task.graph,
       convertedOparlData,
-      `${fileContainer.id}.ttl`,
+      `${fileContainer.id}.nt`,
       task.url,
       task.jobId,
     );
     await appendTaskResultFile(task, fileContainer, fileResult); // for debugging purpose in dashboard
     await appendResultGraphFile(task, resultContainer, fileResult);
 
-    await insertFromTurtleIntoGraph(
+    await insertFromStringIntoGraph(
       convertedOparlData,
+      'application/n-triples',
       MU_SPARQL_ENDPOINT,
       resultContainer,
     );
