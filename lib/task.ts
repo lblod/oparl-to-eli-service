@@ -319,3 +319,21 @@ export async function appendTaskResultGraph(task, container, graphUri) {
 
   await update(queryStr, {}, connectionOptions);
 }
+
+// This relation is expected when using import-same-as service (add-uuid)
+// import-same-as extract the file from the `task:hasGraph/task:hasFile` relation (https://github.com/lblod/import-with-sameas-service/blob/master/lib/graph.js#L199C19-L199C82)
+export async function appendResultGraphFile(task, graphUri, logicalFile) {
+  const queryStr = `
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
+    PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    INSERT DATA {
+      GRAPH ${sparqlEscapeUri(task.graph)} {
+        ${sparqlEscapeUri(graphUri)} task:hasFile ${sparqlEscapeUri(logicalFile)} .
+      }
+    }
+  `;
+
+  await update(queryStr, {}, connectionOptions);
+}

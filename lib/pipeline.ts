@@ -15,6 +15,7 @@ import {
   appendTaskResultFile,
   appendTaskResultGraph,
   createTask,
+  appendResultGraphFile,
 } from './task';
 import { extractLinkToPublications, getEliData } from './utils';
 import { writeFileToTriplestore } from './file-helpers';
@@ -48,11 +49,12 @@ export async function run(taskUri) {
       task.jobId,
     );
     await appendTaskResultFile(task, fileContainer, fileResult); // for debugging purpose in dashboard
+    await appendResultGraphFile(task, resultContainer, fileResult);
 
     await insertFromTurtleIntoGraph(
       convertedOparlData,
       MU_SPARQL_ENDPOINT,
-      TARGET_GRAPH,
+      resultContainer,
     );
 
     // extract linkToPublications and create new task for each link
