@@ -5,7 +5,7 @@ import { Delta } from '../lib/delta';
 
 const router = express.Router();
 
-router.post('/*', async function (req: Request, res: Response) {
+router.post('/*', async function (req: Request, res: Response, next) {
   try {
     const entries = new Delta(req.body).getInsertsFor(
       'http://www.w3.org/ns/adms#status',
@@ -29,7 +29,12 @@ router.post('/*', async function (req: Request, res: Response) {
       'Something unexpected went wrong while handling delta harvesting-tasks!',
     );
     console.error(e);
-    return next(e);
+    if (e instanceof Error) {
+      res.status(500).json({ error: e.message });
+    } else {
+      res.status(500).json({ error: 'Unknown error' });
+    }
+    next(e);
   }
 });
 
