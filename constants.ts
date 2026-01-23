@@ -1,8 +1,6 @@
 import env from 'env-var';
 import { convertPrefixesObjectToSPARQLPrefixes } from './lib/utils';
 
-export const SLEEP_TIME = env.get('SLEEP_TIME').default('10000').asInt();
-
 export const OPARL_TO_ELI_SERVICE_URI =
   'http://lblod.data.gift/services/oparl-to-eli-service';
 export const LINK_TO_PUBLICATION_PREDICATE =
