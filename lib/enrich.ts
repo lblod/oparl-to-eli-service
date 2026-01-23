@@ -47,6 +47,18 @@ function addExistingPaginationLinks(oparlData, linksBlock, proxyUrl: string) {
     const linkToNextWithProxy = rewriteLinkWithProxy(linkToNext, proxyUrl);
     linksBlock['next'] = linkToNextWithProxy.toString();
   }
+
+  // Also link to the subject pages, because these pages will be used to diff later (prov:derivedFrom points to remote data object with url of subject page)
+  if (oparlData['data']) {
+    linksBlock['subject'] = [];
+    for (const subject of oparlData['data']) {
+      if (subject['id']) {
+        const linkToNext = subject['id'];
+        const linkToNextWithProxy = rewriteLinkWithProxy(linkToNext, proxyUrl);
+        linksBlock['subject'].push(linkToNextWithProxy.toString());
+      }
+    }
+  }
 }
 
 function addLinkToPublications(dataBlock, linksBlock, proxyUrl: string) {
@@ -119,7 +131,6 @@ function rewriteLinkWithProxy(originalUrl: string, proxyUrl: string): URL {
   // host is the same when harvesting
   if (host != originalUrlObj.host) {
     firstSegment = `/${proxyUrlObj.pathname.split('/')[1]}`; // 'eli' or 'oparl'
-    console.log('first segment: ' + firstSegment);
   }
 
   const newUrl = new URL(originalUrl.toString());
@@ -127,7 +138,6 @@ function rewriteLinkWithProxy(originalUrl: string, proxyUrl: string): URL {
   newUrl.host = host;
   newUrl.pathname = `${firstSegment}${originalUrlObj.pathname}`;
   try {
-    console.log('new url: ' + newUrl.toString());
     return newUrl;
   } catch (error) {
     console.error('Invalid URL:', originalUrl);

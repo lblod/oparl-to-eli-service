@@ -65,6 +65,8 @@ export async function writeFileToTriplestore(
     const stats = await stat(path);
     const fileSize = stats.size;
 
+    // prov:wasDerivedFrom links to a Remote Data Object
+    // Remote Data Object uses nie:url to link to URL
     // prettier-ignore
     await update(`
         ${PREFIXES_SPARQL}

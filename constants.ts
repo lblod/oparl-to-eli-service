@@ -30,6 +30,13 @@ export const STATUS_SUCCESS =
 export const STATUS_FAILED =
   'http://redpencil.data.gift/id/concept/JobStatus/failed';
 
+export const FILE_STATUSES = {
+  READY: 'http://lblod.data.gift/file-download-statuses/ready-to-be-cached',
+  ONGOING: 'http://lblod.data.gift/file-download-statuses/ongoing',
+  COLLECTED: 'http://lblod.data.gift/file-download-statuses/collected',
+  FAILURE: 'http://lblod.data.gift/file-download-statuses/failure',
+};
+
 export const JOB_TYPE = 'http://vocab.deri.ie/cogs#Job';
 export const TASK_TYPE = 'http://redpencil.data.gift/vocabularies/tasks/Task';
 export const ERROR_TYPE = 'http://open-services.net/ns/core#Error';
@@ -116,7 +123,7 @@ export const SPARQL_CONSTRUCTS = [
     query: `${PREFIXES_SPARQL}
             CONSTRUCT {
               ?paper a eli:Work ;
-                      dcterms:title ?title ;
+                      dcterms:title ?titleLang ;
                       dcterms:identifier ?identifier ;
                       eli:date_document ?date ;
                       eli:work_type ?paperTypeConcept ;
@@ -142,6 +149,7 @@ export const SPARQL_CONSTRUCTS = [
                 ?paper oparl:originatorPerson|oparl:originatorOrganization ?creator .
               }
               OPTIONAL { ?paper oparl:underDirectionOf ?contributor . }
+              BIND(STRLANG(?title, "de") AS ?titleLang)
             }`,
   },
   {

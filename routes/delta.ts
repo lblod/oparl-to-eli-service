@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { STATUS_SCHEDULED } from '../constants';
-import { run as runCollectPipeline } from '../lib/pipeline';
 import { Delta } from '../lib/delta';
+import { run } from '../lib/pipeline';
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ router.post('/*', async function (req: Request, res: Response, next) {
     }
     for (const entry of entries) {
       // NOTE: we don't wait as we do not want to keep hold off the connection.
-      runCollectPipeline(entry);
+      run(entry);
     }
     res.status(200).send();
     return;
