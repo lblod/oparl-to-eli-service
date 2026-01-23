@@ -65,6 +65,8 @@ export async function writeFileToTriplestore(
     const stats = await stat(path);
     const fileSize = stats.size;
 
+    // prov:wasDerivedFrom links to a Remote Data Object
+    // Remote Data Object uses nie:url to link to URL
     // prettier-ignore
     await update(`
         ${PREFIXES_SPARQL}
@@ -90,6 +92,8 @@ export async function writeFileToTriplestore(
                                     dct:format "${contentType}";
                                     nfo:fileSize ${sparqlEscapeInt(fileSize)};
                                     dbpedia:fileExtension "${extension}" .
+
+            ${sparqlEscapeUri(sourceFile)} nie:url ${sparqlEscapeUri(sourceFile)};
           }
         }
   `, {}, connectionOptions);

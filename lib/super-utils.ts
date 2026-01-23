@@ -1,5 +1,5 @@
 // This file is a copy from repository https://github.com/lblod/poc-decide-harvester-publish-service
-// Extended with insertFromTurtleIntoGraph function
+// Extended with insertFromNTriplesIntoGraph function
 // courtesy: Nordine Bittich
 
 import { updateSudo as update } from '@lblod/mu-auth-sudo';
@@ -10,7 +10,7 @@ import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
 import fetch from 'node-fetch';
 import { readFile } from 'fs/promises';
-import { parseTurtleIntoStore } from './utils';
+import { parseStringIntoStore } from './utils';
 export const HTTP_MAX_QUERY_SIZE_BYTES = parseInt(
   process.env.HTTP_MAX_QUERY_SIZE_BYTES || '60000',
 ); // 60kb by default
@@ -318,23 +318,25 @@ export async function deleteFromGraph(
 }
 
 /**
- * Insert a string in Turtle format in a triple store
+ * Insert a string in an RDF format in a triple store
  * Uses RDF/JS Store to generate SPARQL query
  *
- * @param {Array} turtle String in Turtle format
+ * @param {Array} data String in RDF format
+ * @param {Array} format RDF format, e.g. text/turtle
  * @param {string} dbEndpoint SPARQL endpoint URL
  * @param {string} graph Target graph URI
  * @param {object} extraHeaders Extra headers to add to the request
- * @method insertFromTurtleIntoGraph
+ * @method insertFromStringIntoGraph
  * courtesy: Brecht Van de Vyvere
  */
-export async function insertFromTurtleIntoGraph(
-  turtle,
+export async function insertFromStringIntoGraph(
+  data,
+  format,
   dbEndpoint,
   graph,
   extraHeaders = {},
 ) {
-  const store = parseTurtleIntoStore(turtle);
+  const store = parseStringIntoStore(data, format);
   const triples = toTermObjectArray(store.getQuads(null, null, null, null));
 
   console.log(`Inserting ${triples.length} statements into target graph`);
@@ -346,25 +348,25 @@ export async function insertFromTurtleIntoGraph(
   );
 }
 export async function insertFromTripleFileIntoGraph(
-  turtleFilePath,
+  tripleFilePath,
   dbEndpoint,
   graph,
   extraHeaders = {},
 ) {
-  const ttl = await readFile(turtleFilePath, { encoding: 'utf8' });
-  const triples = ttl
+  const ntriples = await readFile(tripleFilePath, { encoding: 'utf8' }); // n-triples format
+  const triples = ntriples
     .split('\n')
     .map((f) => f.trim())
     .filter((f) => f.length);
   console.log(`Inserting ${triples.length} statements into target graph`);
   await updateWithRecover(
     triples,
-    insertTTLFormattedQueryTemplate(graph),
+    insertNTriplesFormattedQueryTemplate(graph),
     dbEndpoint,
     extraHeaders,
   );
 }
-const insertTTLFormattedQueryTemplate = (graph) => (statements) => {
+const insertNTriplesFormattedQueryTemplate = (graph) => (statements) => {
   return `
   INSERT DATA {
     GRAPH <${graph}> {

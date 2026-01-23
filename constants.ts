@@ -28,6 +28,13 @@ export const STATUS_SUCCESS =
 export const STATUS_FAILED =
   'http://redpencil.data.gift/id/concept/JobStatus/failed';
 
+export const FILE_STATUSES = {
+  READY: 'http://lblod.data.gift/file-download-statuses/ready-to-be-cached',
+  ONGOING: 'http://lblod.data.gift/file-download-statuses/ongoing',
+  COLLECTED: 'http://lblod.data.gift/file-download-statuses/collected',
+  FAILURE: 'http://lblod.data.gift/file-download-statuses/failure',
+};
+
 export const JOB_TYPE = 'http://vocab.deri.ie/cogs#Job';
 export const TASK_TYPE = 'http://redpencil.data.gift/vocabularies/tasks/Task';
 export const ERROR_TYPE = 'http://open-services.net/ns/core#Error';
@@ -49,6 +56,7 @@ export const STRING_LIMIT = env
 export const PREFIXES = {
   harvesting: 'http://lblod.data.gift/vocabularies/harvesting/',
   terms: 'http://purl.org/dc/terms/',
+  dcterms: 'http://purl.org/dc/terms/',
   prov: 'http://www.w3.org/ns/prov#',
   nie: 'http://www.semanticdesktop.org/ontologies/2007/01/19/nie#',
   ext: 'http://mu.semte.ch/vocabularies/ext/',
@@ -65,6 +73,8 @@ export const PREFIXES = {
   xsd: 'http://www.w3.org/2001/XMLSchema#',
   oparl: 'https://schema.oparl.org/',
   epvoc: 'https://data.europarl.europa.eu/def/epvoc#',
+  foaf: 'http://xmlns.com/foaf/0.1/',
+  rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
 };
 
 export const PREFIXES_SPARQL = convertPrefixesObjectToSPARQLPrefixes(PREFIXES);
@@ -95,6 +105,7 @@ export const OPARL_JSON_LD_CONTEXT = {
         person: 'linkToPublication',
         paper: 'linkToPublication',
         consultation: 'linkToPublication',
+        subject: 'linkToPublication',
       },
     },
     pagination: null,
@@ -110,7 +121,7 @@ export const SPARQL_CONSTRUCTS = [
     query: `${PREFIXES_SPARQL}
             CONSTRUCT {
               ?paper a eli:Work ;
-                      dcterms:title ?title ;
+                      dcterms:title ?titleLang ;
                       dcterms:identifier ?identifier ;
                       eli:date_document ?date ;
                       eli:work_type ?paperTypeConcept ;
@@ -136,45 +147,67 @@ export const SPARQL_CONSTRUCTS = [
                 ?paper oparl:originatorPerson|oparl:originatorOrganization ?creator .
               }
               OPTIONAL { ?paper oparl:underDirectionOf ?contributor . }
+              BIND(STRLANG(?title, "de") AS ?titleLang)
             }`,
   },
   {
-    name: 'File',
+    name: 'File (Main)',
     query: `${PREFIXES_SPARQL}
-              CONSTRUCT {
+              CONSTRUCT {                
                 ?expression a eli:Expression ;
                   eli:title ?titleLang ;
                   eli:language <http://publications.europa.eu/resource/authority/language/DEU> ;
                   epvoc:expressionContent ?textLang ;
-                  eli:is_embodied_by ?file ;
-                  dcterms:created ?createdDT ;
-                  dcterms:modified ?modifiedDT .
+                  eli:is_embodied_by ?manifestation .
 
-                ?file a eli:Manifestation ;
+                ?manifestation a eli:Manifestation ;
                   eli:media_type ?mimeType ;
                   epvoc:byteSize ?size ;
                   dcterms:issued ?issuedDate ;
-                  eli:is_exemplified_by ?accessUrl ;
-                  dcterms:created ?createdDT ;
-                  dcterms:modified ?modifiedDT .
+                  eli:is_exemplified_by ?accessUrl .
               }
               WHERE {
-                ?file a oparl:File ;
-                      oparl:name ?name ;
-                      oparl:mimeType ?mimeType ;
-                      oparl:size ?size ;
-                      oparl:created ?created ;
-                      oparl:modified ?modified ;
-                      oparl:text ?text ;
-                      oparl:accessUrl ?accessUrl .
+                ?paper oparl:mainFile ?manifestation .
+
+                ?manifestation a oparl:File ;
+                    oparl:name ?name ;
+                    oparl:mimeType ?mimeType ;
+                    oparl:size ?size ;
+                    oparl:text ?text ;
+                    oparl:accessUrl ?accessUrl .
 
                 # Create derived IRIs and typed/language-tagged literals
-                BIND(IRI(CONCAT(STR(?file), "/expression/de")) AS ?expression)
+                BIND(IRI(CONCAT(STR(?manifestation), "/expression/de")) AS ?expression)
+                BIND(STRLANG(?name, "de") AS ?titleLang)
+                BIND(STRLANG(?text, "de") AS ?textLang)
+              }`,
+  },
+  {
+    name: 'File (Auxiliary)',
+    query: `${PREFIXES_SPARQL}
+              CONSTRUCT {
+                ?document a foaf:Document ;
+                  eli:media_type ?mimeType ;
+                  epvoc:byteSize ?size ;
+                  dcterms:issued ?issuedDate ;
+                  rdfs:seeAlso ?accessUrl .
+              }
+              WHERE {
+                ?paper oparl:auxiliaryFile ?document .
+
+                ?document a oparl:File ;
+                    oparl:name ?name ;
+                    oparl:mimeType ?mimeType ;
+                    oparl:size ?size ;
+                    oparl:created ?created ;
+                    oparl:modified ?modified ;
+                    oparl:text ?text ;
+                    oparl:accessUrl ?accessUrl .
+                
+                # Create typed/language-tagged literals
                 BIND(STRLANG(?name, "de") AS ?titleLang)
                 BIND(STRLANG(?text, "de") AS ?textLang)
                 BIND(xsd:date(?date) AS ?issuedDate)
-                BIND(xsd:dateTime(?created) AS ?createdDT)
-                BIND(xsd:dateTime(?modified) AS ?modifiedDT)
               }`,
   },
   {
