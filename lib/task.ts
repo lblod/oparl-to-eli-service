@@ -143,7 +143,7 @@ export async function getRemoteDataObjectWithUrl(
         ?collection dct:hasPart ?uri .
         ?uri a nfo:RemoteDataObject;
             mu:uuid ?uuid;
-            nie:url ${sparqlEscapeString(url)}.
+            nie:url ${sparqlEscapeUri(url)}.
       }
      }
      LIMIT 1
