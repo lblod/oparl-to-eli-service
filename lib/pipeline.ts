@@ -29,7 +29,7 @@ export async function run(taskSubject) {
     // We create a specific process queue per task to control the load on the associated OParl API
     const taskSpecificQueue = new PQueue({
       concurrency: 3, // control parallelism
-      intervalCap: 100, // optional rate limit
+      intervalCap: 10, // rate limit on 10 requests per second
       interval: 1000,
     });
 
