@@ -11,8 +11,8 @@ Second, the service reacts to Oparl harvesting Tasks in the triple store. Follow
 
 * Retrieve Oparl URL provided in the input container of the task
 * Call function to fetch Oparl URL (JSON format), enrich towards JSON-LD, and transform to ELI-DL format
-* Save ELI-DL in Turtle format in file
-* Extract linkToPublication links and create for each discovered link a new Oparl harvesting task (see datamodel below)
+* Save ELI-DL in Turtle format in file (result container) for the add-uid task.
+* Extract linkToPublication links and append the links to the input container of the (same) task. An in-memory queue is used to process all discovered OParl links during one task. 
 
 # Usage
 
@@ -24,7 +24,7 @@ Second, the service reacts to Oparl harvesting Tasks in the triple store. Follow
    curl http://localhost/oparl/oparl/System
 ```
 
-This will send a request to `https://ris.freiburg.de/oparl/System` and enrich with JSON-LD context.
+This will send a request to the `OPARL_ENDPOINT` environment variable (e.g. `https://ris.freiburg.de/oparl/System`) and enrich with JSON-LD context.
 Also, some of the navigation links will be added as lblod:linkToPublications.
 
 ### 2. Retrieve ELI-DL (converted OParl response)
@@ -47,7 +47,7 @@ Add the following snippet in your docker-compose.yml:
 
 ## Environment variables
 
-* `OPARL_ENDPOINT`: endpoint to fetch, for example https://ris.freiburg.de/oparl
+* `OPARL_ENDPOINT`: (OPTIONAL) OParl endpoint to expose with proxy API, for example: https://ris.freiburg.de/oparl
 * `EMBED_JSONLD_CONTEXT`: whether the JSON-LD context should be provided inside the response or just linked. Default 'true'
 
 ## Health check
@@ -62,8 +62,9 @@ The service exposes an endpoint `/status` that you can GET to.
 
 Following navigation links in Oparl are mapped to `lblod:linkToPublication`:
 
-![LinkToPublications in Oparl response](docs/oparlspec-linktopublication.png)
-]
+![LinkToPublications in Oparl response](docs/oparlspec-linktopublication.png)]
+
+Also, subject pages are annotated with `lblod:linkToPublication`. These pages are written to result containers to run the diff-service later on.
 
 ## Example harvesting task
 
@@ -78,19 +79,22 @@ The task model described in the [job-controller-service](https://github.com/lblo
     adms:status <http://redpencil.data.gift/id/concept/JobStatus/scheduled>;
     task:index """1""";
     task:operation <http://lblod.data.gift/id/jobs/concept/TaskOperation/harvesting/oparl>.
-    2025-10-16 16:10:34 
 
 <http://lblod.data.gift/id/dataContainers/e1ac5091-aa99-11f0-9253-d7fdf867c511> a nfo:DataContainer ;
     task:hasHarvestingCollection <http://lblod.data.gift/id/harvest-collections/e1ac5092-aa99-11f0-9253-d7fdf867c511> ;
     mu:uuid """e1ac5091-aa99-11f0-9253-d7fdf867c511""" .
-    2025-10-16 16:10:34 
-    <http://lblod.data.gift/id/harvest-collections/e1ac5092-aa99-11f0-9253-d7fdf867c511> a harvesting:HarvestingCollection ;
+
+<http://lblod.data.gift/id/harvest-collections/e1ac5092-aa99-11f0-9253-d7fdf867c511> a harvesting:HarvestingCollection ;
     mu:uuid """e1ac5092-aa99-11f0-9253-d7fdf867c511""" ;
     dct:hasPart <http://lblod.data.gift/id/remote-data-objects/e1ac5093-aa99-11f0-9253-d7fdf867c511> .
 
 
 <http://lblod.data.gift/id/remote-data-objects/e1ac5093-aa99-11f0-9253-d7fdf867c511> a nfo:RemoteDataObject ;
     mu:uuid """e1ac5093-aa99-11f0-9253-d7fdf867c511""" ;
+    dct:created "2025-10-16T15:12:34.137Z"^^xsd:dateTime;
+    dct:creator <http://lblod.data.gift/services/oparl-to-eli-service>;
+    dct:modified "2025-10-16T15:12:34.137Z"^^xsd:dateTime;
+    adms:status <http://lblod.data.gift/file-download-statuses/ready-to-be-cached>.
     nie:url """https://ris.freiburg.de/oparl""" .
 ```
 

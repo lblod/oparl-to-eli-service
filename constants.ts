@@ -8,6 +8,8 @@ export const LINK_TO_PUBLICATION_PREDICATE =
 
 export const TASK_HARVESTING_OPARL =
   'http://lblod.data.gift/id/jobs/concept/TaskOperation/harvesting/oparl';
+export const TASK_SINGLETON =
+  'http://lblod.data.gift/id/jobs/concept/TaskOperation/singleton-job';
 export const JOB_HARVESTING_OPARL =
   'http://lblod.data.gift/id/jobs/concept/JobOperation/harvesting/oparl';
 

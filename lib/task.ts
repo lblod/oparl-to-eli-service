@@ -19,6 +19,13 @@ import {
   PREFIXES_SPARQL,
   TARGET_GRAPH,
   FILE_STATUSES,
+  TASK_URI_PREFIX,
+  JOB_URI_PREFIX,
+  OPARL_TO_ELI_SERVICE_URI,
+  JOB_HARVESTING_OPARL,
+  JOB_TYPE,
+  CONTAINER_URI_PREFIX,
+  HARVEST_COLLECTION_URI_PREFIX,
 } from '../constants';
 import { parseResult } from './utils';
 const connectionOptions = {
@@ -432,7 +439,7 @@ export async function createRemoteDataObject(collection, url) {
           mu:uuid ${sparqlEscapeString(uuid)};
           nie:url ${sparqlEscapeUri(url)};
           dct:created ${sparqlEscapeDateTime(created)};
-          dct:creator <http://lblod.data.gift/services/scraper>;
+          dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)};
           dct:modified ${sparqlEscapeDateTime(created)};
           adms:status ${sparqlEscapeUri(FILE_STATUSES.READY)}.
       }

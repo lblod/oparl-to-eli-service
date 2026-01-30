@@ -5,6 +5,7 @@ import {
   TARGET_GRAPH,
   STATUS_SCHEDULED,
   TASK_HARVESTING_OPARL,
+  TASK_SINGLETON,
 } from '../constants';
 import { createTask } from '../lib/task';
 
@@ -15,7 +16,7 @@ router.post('/*', async (req, res) => {
     await createTask(
       TARGET_GRAPH,
       '0',
-      TASK_HARVESTING_OPARL,
+      TASK_SINGLETON,
       STATUS_SCHEDULED,
       `${OPARL_ENDPOINT}`,
     );
