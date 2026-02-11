@@ -80,6 +80,7 @@ export const PREFIXES = {
   org: 'http://www.w3.org/ns/org#',
   skos: 'http://www.w3.org/2004/02/skos/core#',
   dcat: 'http://www.w3.org/ns/dcat#',
+  euvoc: 'http://publications.europa.eu/ontology/euvoc#',
 };
 
 export const PREFIXES_SPARQL = convertPrefixesObjectToSPARQLPrefixes(PREFIXES);
@@ -151,7 +152,7 @@ export const SPARQL_CONSTRUCTS = [
     name: 'Location',
     query: `${PREFIXES_SPARQL}
               CONSTRUCT {
-                ?location a org:Site ;
+                ?location a org:Site, skos:Concept ;
                         oparl:streetAddress ?streetAddress ;
                         oparl:postalCode ?postalCode ;
                         oparl:locality ?locality ;
@@ -165,6 +166,34 @@ export const SPARQL_CONSTRUCTS = [
                         oparl:locality ?locality ;
                         oparl:web ?web ;
                         oparl:geojson ?geojson .
+              }`,
+  },
+  {
+    name: 'Organization',
+    query: `${PREFIXES_SPARQL}
+              CONSTRUCT {
+                ?org a org:Organization ;
+                      dcterms:identifier ?shortName ;
+                      skos:prefLabel ?nameWithLang ;
+                      org:classification ?organizationType .
+
+                ?body org:hasSubOrganization ?org .
+
+                ?organizationType a euvoc:CorporateBodyClassification, skos:Concept ;
+                                  skos:prefLabel ?organizationTypeNameWithLang .
+              }
+              WHERE {
+                ?org a oparl:Organization ;
+                        oparl:body ?bodyStr ;
+                        oparl:shortName ?shortName ;
+                        oparl:name ?name ;
+                        oparl:organizationType ?organizationTypeName ;
+                        oparl:membership ?membership .
+
+                BIND(URI(?bodyStr) as ?body)
+                BIND(URI(CONCAT(STR('http://data.lblod.info/id/concepts/corporateBodyClassification/'), MD5(?organizationTypeName))) as ?organizationType)
+                BIND(strlang(?name, 'de') as ?nameWithLang)
+                BIND(strlang(?organizationTypeName, 'de') as ?organizationTypeNameWithLang)
               }`,
   },
   {
@@ -291,7 +320,7 @@ export const SPARQL_CONSTRUCTS = [
                 ?s a ?type .
                 ?s ?p ?o .
                 
-                FILTER (?type NOT IN (oparl:Body, oparl:Location, oparl:Paper, oparl:File, oparl:Consultation))
+                FILTER (?type NOT IN (oparl:Body, oparl:Location, oparl:Organization, oparl:Paper, oparl:File, oparl:Consultation))
                 FILTER(!isBlank(?s) && !isBlank(?p) && !isBlank(?o))
               }`,
   },
