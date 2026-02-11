@@ -1,12 +1,7 @@
 import express from 'express';
 
 import { OPARL_ENDPOINT } from '../config';
-import {
-  TARGET_GRAPH,
-  STATUS_SCHEDULED,
-  TASK_HARVESTING_OPARL,
-  TASK_SINGLETON,
-} from '../constants';
+import { TARGET_GRAPH, STATUS_SCHEDULED, TASK_SINGLETON } from '../constants';
 import { createTask } from '../lib/task';
 
 const router = express.Router();
