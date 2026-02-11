@@ -77,6 +77,9 @@ export const PREFIXES = {
   epvoc: 'https://data.europarl.europa.eu/def/epvoc#',
   foaf: 'http://xmlns.com/foaf/0.1/',
   rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
+  org: 'http://www.w3.org/ns/org#',
+  skos: 'http://www.w3.org/2004/02/skos/core#',
+  dcat: 'http://www.w3.org/ns/dcat#',
 };
 
 export const PREFIXES_SPARQL = convertPrefixesObjectToSPARQLPrefixes(PREFIXES);
@@ -118,6 +121,52 @@ export const OPARL_JSON_LD_CONTEXT = {
 };
 
 export const SPARQL_CONSTRUCTS = [
+  {
+    name: 'Body',
+    query: `${PREFIXES_SPARQL}
+              CONSTRUCT {
+                ?body a org:Organization ;
+                      dcterms:identifier ?shortName ;
+                      skos:prefLabel ?nameWithLang ;
+                      org:classification <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> ;
+                      oparl:legislativeTerm ?legislativeTerm ;
+                      dcat:contactPoint ?contactPoint .
+
+                ?contactPoint a epvoc:ContactPoint ;
+                              epvoc:hasSite ?location .
+              }
+              WHERE {
+                ?body a oparl:Body ;
+                        oparl:shortName ?shortName ;
+                        oparl:name ?name ;
+                        oparl:contactName ?contactName ;
+                        oparl:legislativeTerm ?legislativeTerm ;
+                        oparl:location ?location .
+
+                BIND(URI(CONCAT(STR(?body), '/contactpoint')) AS ?contactPoint)
+                BIND(strlang(?name, 'de') as ?nameWithLang)
+              }`,
+  },
+  {
+    name: 'Location',
+    query: `${PREFIXES_SPARQL}
+              CONSTRUCT {
+                ?location a org:Site ;
+                        oparl:streetAddress ?streetAddress ;
+                        oparl:postalCode ?postalCode ;
+                        oparl:locality ?locality ;
+                        oparl:web ?web ;
+                        oparl:geojson ?geojson .
+              }
+              WHERE {
+                ?location a oparl:Location ;
+                        oparl:streetAddress ?streetAddress ;
+                        oparl:postalCode ?postalCode ;
+                        oparl:locality ?locality ;
+                        oparl:web ?web ;
+                        oparl:geojson ?geojson .
+              }`,
+  },
   {
     name: 'Paper',
     query: `${PREFIXES_SPARQL}
@@ -242,7 +291,7 @@ export const SPARQL_CONSTRUCTS = [
                 ?s a ?type .
                 ?s ?p ?o .
                 
-                FILTER (?type NOT IN (oparl:Paper, oparl:File, oparl:Consultation))
+                FILTER (?type NOT IN (oparl:Body, oparl:Location, oparl:Paper, oparl:File, oparl:Consultation))
                 FILTER(!isBlank(?s) && !isBlank(?p) && !isBlank(?o))
               }`,
   },
