@@ -81,45 +81,83 @@ export const PREFIXES = {
   skos: 'http://www.w3.org/2004/02/skos/core#',
   dcat: 'http://www.w3.org/ns/dcat#',
   euvoc: 'http://publications.europa.eu/ontology/euvoc#',
+  m8g: 'http://data.europa.eu/m8g/',
+  locn: 'http://www.w3.org/ns/locn#',
+  geojson: 'https://purl.org/geojson/vocab#',
+  geosparql: 'http://www.opengis.net/ont/geosparql#',
+  schema: 'http://schema.org/',
 };
 
 export const PREFIXES_SPARQL = convertPrefixesObjectToSPARQLPrefixes(PREFIXES);
 
-export const OPARL_JSON_LD_CONTEXT = {
-  '@context': {
-    '@vocab': 'https://schema.oparl.org/',
-    'more-it-solutions': 'http://more-it-solutions.de/',
-    'more-software-gmbh': 'http://more-software-gmbh.de/',
-    id: '@id',
-    type: '@type',
-    data: '@included',
-    links: '@included',
-    lblod: 'http://lblod.data.gift/vocabularies/besluit/',
-    tree: 'https://w3id.org/tree#',
-    Node: {
-      '@id': 'tree:Node',
-      '@type': '@id',
-      '@context': {
-        linkToPublication: {
-          '@id': LINK_TO_PUBLICATION_PREDICATE,
-          '@type': '@id',
-        },
-        next: 'linkToPublication',
-        body: 'linkToPublication',
-        organization: 'linkToPublication',
-        meeting: 'linkToPublication',
-        person: 'linkToPublication',
-        paper: 'linkToPublication',
-        consultation: 'linkToPublication',
-        subject: 'linkToPublication',
+export const OPARL_JSON_LD_CONTEXT = [
+  {
+    '@context': {
+      '@version': 1.1,
+      geojsonvoc: 'https://purl.org/geojson/vocab#',
+      Feature: 'geojsonvoc:Feature',
+      FeatureCollection: 'geojsonvoc:FeatureCollection',
+      GeometryCollection: 'geojsonvoc:GeometryCollection',
+      LineString: 'geojsonvoc:LineString',
+      MultiLineString: 'geojsonvoc:MultiLineString',
+      MultiPoint: 'geojsonvoc:MultiPoint',
+      MultiPolygon: 'geojsonvoc:MultiPolygon',
+      Point: 'geojsonvoc:Point',
+      Polygon: 'geojsonvoc:Polygon',
+      bbox: {
+        '@container': '@list',
+        '@id': 'geojsonvoc:bbox',
       },
+      coordinates: {
+        '@container': '@list',
+        '@id': 'geojsonvoc:coordinates',
+      },
+      features: {
+        '@container': '@set',
+        '@id': 'geojsonvoc:features',
+      },
+      geometry: 'geojsonvoc:geometry',
+      id: '@id',
+      properties: 'geojsonvoc:properties',
+      type: '@type',
     },
-    pagination: null,
-    first: null,
-    last: null,
-    self: null,
   },
-};
+  {
+    '@context': {
+      '@vocab': 'https://schema.oparl.org/',
+      'more-it-solutions': 'http://more-it-solutions.de/',
+      'more-software-gmbh': 'http://more-software-gmbh.de/',
+      id: '@id',
+      type: '@type',
+      data: '@included',
+      links: '@included',
+      lblod: 'http://lblod.data.gift/vocabularies/besluit/',
+      tree: 'https://w3id.org/tree#',
+      Node: {
+        '@id': 'tree:Node',
+        '@type': '@id',
+        '@context': {
+          linkToPublication: {
+            '@id': LINK_TO_PUBLICATION_PREDICATE,
+            '@type': '@id',
+          },
+          next: 'linkToPublication',
+          body: 'linkToPublication',
+          organization: 'linkToPublication',
+          meeting: 'linkToPublication',
+          person: 'linkToPublication',
+          paper: 'linkToPublication',
+          consultation: 'linkToPublication',
+          subject: 'linkToPublication',
+        },
+      },
+      pagination: null,
+      first: null,
+      last: null,
+      self: null,
+    },
+  },
+];
 
 export const SPARQL_CONSTRUCTS = [
   {
@@ -152,12 +190,21 @@ export const SPARQL_CONSTRUCTS = [
     name: 'Location',
     query: `${PREFIXES_SPARQL}
               CONSTRUCT {
-                ?location a org:Site, skos:Concept ;
-                        oparl:streetAddress ?streetAddress ;
-                        oparl:postalCode ?postalCode ;
-                        oparl:locality ?locality ;
-                        oparl:web ?web ;
-                        oparl:geojson ?geojson .
+              # org:Site to align with ORG-EP
+              # dcterms:Location is used in DECIDE for any type of location
+                ?location a org:Site, dcterms:Location ;
+                        rdfs:label ?localityWithLang ;
+                        locn:hasAddress ?address ;
+                        locn:hasGeometry ?geometry ;
+                        schema:url ?web .
+
+                ?address a locn:Address ;
+                         locn:thoroughfare ?streetAddressWithLang ;
+                         locn:postCode ?postalCode ;
+                         locn:postName ?localityWithLang .
+
+                ?geometry a locn:Geometry ;
+                        geosparql:asWKT ?geometryWkt .
               }
               WHERE {
                 ?location a oparl:Location ;
@@ -166,6 +213,23 @@ export const SPARQL_CONSTRUCTS = [
                         oparl:locality ?locality ;
                         oparl:web ?web ;
                         oparl:geojson ?geojson .
+
+                OPTIONAL {
+                  ?geojson geojson:geometry ?geojsonGeometry .
+                  ?geojsonGeometry a geojson:Point ;
+                                  geojson:coordinates ?coordinates .
+
+                  ?coordinates rdf:first ?long .
+                  ?coordinates rdf:rest/rdf:first ?lat .
+
+                  # Convert GeoJSON coordinates to WKT format (POINT(lon lat))
+                  BIND(STRDT(CONCAT("http://www.opengis.net/def/crs/EPSG/0/4326/POINT(", STR(?long), " ", STR(?lat), ")"), geosparql:wktLiteral) AS ?geometryWkt)
+                }
+
+                BIND(strlang(?streetAddress, 'de') as ?streetAddressWithLang)
+                BIND(strlang(?locality, 'de') as ?localityWithLang)
+                BIND(URI(CONCAT(STR(?location), '/address')) AS ?address)
+                BIND(URI(CONCAT(STR(?location), '/geometry')) AS ?geometry)
               }`,
   },
   {
