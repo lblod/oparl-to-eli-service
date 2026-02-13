@@ -54,6 +54,7 @@ export const STRING_LIMIT = env
   .get('STRING_LIMIT')
   .default('5000')
   .asIntPositive();
+export const WRITE_TO_GRAPH = env.get('WRITE_TO_GRAPH').default('').asString();
 
 export const PREFIXES = {
   harvesting: 'http://lblod.data.gift/vocabularies/harvesting/',
