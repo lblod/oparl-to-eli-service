@@ -1,4 +1,4 @@
-// This file is a copy from repository https://github.com/lblod/poc-decide-harvester-publish-service
+// This file is inspired by repository https://github.com/lblod/poc-decide-harvester-publish-service
 // Extended with insertFromNTriplesIntoGraph function
 // courtesy: Nordine Bittich
 
