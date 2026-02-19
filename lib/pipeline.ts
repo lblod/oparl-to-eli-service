@@ -1,5 +1,11 @@
 import { uuid } from 'mu';
-import { STATUS_BUSY, STATUS_SUCCESS, STATUS_FAILED, WRITE_TO_GRAPH, MU_SPARQL_ENDPOINT } from '../constants';
+import {
+  STATUS_BUSY,
+  STATUS_SUCCESS,
+  STATUS_FAILED,
+  WRITE_TO_GRAPH,
+  MU_SPARQL_ENDPOINT,
+} from '../constants';
 import {
   loadCollectingTask,
   updateTaskStatus,
