@@ -1,5 +1,5 @@
 import { uuid } from 'mu';
-import { STATUS_BUSY, STATUS_SUCCESS, STATUS_FAILED } from '../constants';
+import { STATUS_BUSY, STATUS_SUCCESS, STATUS_FAILED, WRITE_TO_GRAPH, MU_SPARQL_ENDPOINT } from '../constants';
 import {
   loadCollectingTask,
   updateTaskStatus,
@@ -15,6 +15,7 @@ import { extractLinkToPublications, getEliData } from './utils';
 import { writeFileToTriplestore } from './file-helpers';
 import { enqueuePipeline } from './queue';
 import PQueue from 'p-queue';
+import { insertFromStringIntoGraph } from './super-utils';
 
 export async function run(taskSubject) {
   const task = await loadCollectingTask(taskSubject);
@@ -92,13 +93,14 @@ export async function process(task, url, taskSpecificQueue: PQueue) {
     await appendResultGraphFile(task, resultContainer, fileResult);
 
     // Write triples to landing zone graph
-    // Not used, because add-uuid and diff service work on files, but could be useful for debugging
-    // await insertFromStringIntoGraph(
-    //   convertedOparlData,
-    //   'application/n-triples',
-    //   MU_SPARQL_ENDPOINT,
-    //   resultContainer,
-    // );
+    if (WRITE_TO_GRAPH != '') {
+      await insertFromStringIntoGraph(
+        convertedOparlData,
+        'application/n-triples',
+        MU_SPARQL_ENDPOINT,
+        WRITE_TO_GRAPH,
+      );
+    }
 
     await appendTaskResultGraph(task, graphContainer, resultContainer);
   }
