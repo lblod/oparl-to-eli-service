@@ -111,14 +111,11 @@ export async function loadCollectingTask(subject) {
   return task;
 }
 
-export async function getInitialRemoteDataObject(
-  collectionSubject,
-  graph = TARGET_GRAPH,
-) {
+export async function getInitialRemoteDataObject(collectionSubject) {
   const queryRdo = `
      ${PREFIXES_SPARQL}
      SELECT DISTINCT ?uri ?uuid ?url WHERE {
-      GRAPH ${sparqlEscapeUri(graph)} {
+      GRAPH ?g {
         BIND(${sparqlEscapeUri(collectionSubject)} as ?collection)
         ?collection a harvesting:HarvestingCollection .
         
@@ -135,15 +132,11 @@ export async function getInitialRemoteDataObject(
   return rdo;
 }
 
-export async function getRemoteDataObjectWithUrl(
-  collectionSubject,
-  url,
-  graph = TARGET_GRAPH,
-) {
+export async function getRemoteDataObjectWithUrl(collectionSubject, url) {
   const queryTask = `
      ${PREFIXES_SPARQL}
      SELECT DISTINCT ?uri ?uuid ?url WHERE {
-      GRAPH ${sparqlEscapeUri(graph)} {
+      GRAPH ?g {
         BIND(${sparqlEscapeUri(collectionSubject)} as ?collection)
         ?collection a harvesting:HarvestingCollection .
         
@@ -160,22 +153,17 @@ export async function getRemoteDataObjectWithUrl(
   return rdo;
 }
 
-export async function getHarvestCollectionForTask(
-  subject,
-  graph = TARGET_GRAPH,
-) {
+export async function getHarvestCollectionForTask(subject) {
   const queryTask = `
      ${PREFIXES_SPARQL}
      SELECT DISTINCT ?graph ?task ?collection WHERE {
-      GRAPH ${sparqlEscapeUri(graph)} {
+      GRAPH ?graph {
         BIND(${sparqlEscapeUri(subject)} as ?task)
         ?task a ${sparqlEscapeUri(TASK_TYPE)}.
         
         ?task task:inputContainer ?inputContainer .
         ?inputContainer task:hasHarvestingCollection ?collection .
-        ?collection a harvesting:HarvestingCollection .
-        
-        BIND (${sparqlEscapeUri(graph)} as ?graph)
+        ?collection a harvesting:HarvestingCollection .        
       }
      }
     `;
