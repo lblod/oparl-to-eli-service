@@ -18,7 +18,8 @@ router.post('/*', async function (req: Request, res: Response) {
       res.status(204).send();
       return;
     }
-    for (const entry of entries) {
+    const uniqueEntries = new Set(entries);
+    for (const entry of uniqueEntries) {
       // NOTE: we don't wait as we do not want to keep hold off the connection.
       run(entry);
     }
