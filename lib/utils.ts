@@ -10,23 +10,30 @@ import { MAX_OPARL_RETRIES } from '../config';
  * @param {number} retries - number of times to retry requests, defaults to MAX_OPARL_RETRIES
  * @returns {object} JSON response
  */
-export async function getOparlData(oparlUrl: string, retries = MAX_OPARL_RETRIES) {
+export async function getOparlData(
+  oparlUrl: string,
+  retries = MAX_OPARL_RETRIES,
+) {
   const response = await fetch(oparlUrl).catch(async (e) => {
-    console.warn(`Failed sending OPARL request: `, e);
+    console.warn(`Failed sending OPARL request: ${e}`);
     return { ok: false, status: 0, json: () => {} };
   });
   console.log('Sent Oparl request:', oparlUrl);
-  if (!response.ok){
-    if(retries > 0){
+  if (!response.ok) {
+    if (retries > 0) {
       console.warn(`Failed OPARL request, ${retries} retries left`);
-      await new Promise((resolve) => setTimeout(resolve, 500 * 10**(MAX_OPARL_RETRIES - retries)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, 500 * 10 ** (MAX_OPARL_RETRIES - retries)),
+      );
       return getOparlData(oparlUrl, retries - 1);
-    }else{
-      console.error(`Failed OPARL request, no retries left. Last status: `, response.status);
+    } else {
+      console.error(
+        `Failed OPARL request, no retries left. Last status: ${response.status}`,
+      );
       throw new Error('');
     }
-  } 
-  
+  }
+
   return await response.json();
 }
 
