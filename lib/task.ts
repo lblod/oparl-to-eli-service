@@ -15,16 +15,17 @@ import {
   TASK_HARVESTING_OPARL,
   ERROR_TYPE,
   MU_SPARQL_ENDPOINT,
-  TASK_URI_PREFIX,
-  CONTAINER_URI_PREFIX,
-  HARVEST_COLLECTION_URI_PREFIX,
   REMOTE_DATA_OBJECT_URI_PREFIX,
+  PREFIXES_SPARQL,
+  TARGET_GRAPH,
+  FILE_STATUSES,
+  TASK_URI_PREFIX,
   JOB_URI_PREFIX,
   OPARL_TO_ELI_SERVICE_URI,
   JOB_HARVESTING_OPARL,
-  STATUS_SCHEDULED,
-  PREFIXES_SPARQL,
   JOB_TYPE,
+  CONTAINER_URI_PREFIX,
+  HARVEST_COLLECTION_URI_PREFIX,
 } from '../constants';
 import { parseResult } from './utils';
 const connectionOptions = {
@@ -86,7 +87,7 @@ export async function isTask(subject) {
 export async function loadCollectingTask(subject) {
   const queryTask = `
      ${PREFIXES_SPARQL}
-     SELECT DISTINCT ?graph ?task ?id ?job ?created ?modified ?status ?index ?operation ?error ?url WHERE {
+     SELECT DISTINCT ?graph ?task ?id ?job ?created ?modified ?status ?index ?operation ?error WHERE {
       GRAPH ?graph {
         BIND(${sparqlEscapeUri(subject)} as ?task)
         ?task a ${sparqlEscapeUri(TASK_TYPE)}.
@@ -101,14 +102,68 @@ export async function loadCollectingTask(subject) {
             ${sparqlEscapeUri(TASK_HARVESTING_OPARL)}
           }
         
-        ?task task:inputContainer ?inputContainer .
-        ?inputContainer task:hasHarvestingCollection ?harvestCollection .
-        ?harvestCollection a harvesting:HarvestingCollection .
-        ?harvestCollection dct:hasPart ?rdo .
-        ?rdo a nfo:RemoteDataObject;
-            nie:url ?url.
-        
         OPTIONAL { ?task task:error ?error. }
+      }
+     }
+    `;
+  const task = parseResult(await query(queryTask, {}, { mayRetry: true }))[0];
+  if (!task) return null;
+  return task;
+}
+
+export async function getInitialRemoteDataObject(collectionSubject) {
+  const queryRdo = `
+     ${PREFIXES_SPARQL}
+     SELECT DISTINCT ?uri ?uuid ?url WHERE {
+      GRAPH ?g {
+        BIND(${sparqlEscapeUri(collectionSubject)} as ?collection)
+        ?collection a harvesting:HarvestingCollection .
+        
+        ?collection dct:hasPart ?uri .
+        ?uri a nfo:RemoteDataObject;
+            mu:uuid ?uuid;
+            nie:url ?url.
+      }
+     }
+     LIMIT 1
+    `;
+  const rdo = parseResult(await query(queryRdo, {}, { mayRetry: true }))[0];
+  if (!rdo) return null;
+  return rdo;
+}
+
+export async function getRemoteDataObjectWithUrl(collectionSubject, url) {
+  const queryTask = `
+     ${PREFIXES_SPARQL}
+     SELECT DISTINCT ?uri ?uuid ?url WHERE {
+      GRAPH ?g {
+        BIND(${sparqlEscapeUri(collectionSubject)} as ?collection)
+        ?collection a harvesting:HarvestingCollection .
+        
+        ?collection dct:hasPart ?uri .
+        ?uri a nfo:RemoteDataObject;
+            mu:uuid ?uuid;
+            nie:url ${sparqlEscapeUri(url)}.
+      }
+     }
+     LIMIT 1
+    `;
+  const rdo = parseResult(await query(queryTask, {}, { mayRetry: true }))[0];
+  if (!rdo) return null;
+  return rdo;
+}
+
+export async function getHarvestCollectionForTask(subject) {
+  const queryTask = `
+     ${PREFIXES_SPARQL}
+     SELECT DISTINCT ?graph ?task ?collection WHERE {
+      GRAPH ?graph {
+        BIND(${sparqlEscapeUri(subject)} as ?task)
+        ?task a ${sparqlEscapeUri(TASK_TYPE)}.
+        
+        ?task task:inputContainer ?inputContainer .
+        ?inputContainer task:hasHarvestingCollection ?collection .
+        ?collection a harvesting:HarvestingCollection .        
       }
      }
     `;
@@ -318,4 +373,73 @@ export async function appendTaskResultGraph(task, container, graphUri) {
   `;
 
   await update(queryStr, {}, connectionOptions);
+}
+
+// This relation is expected when using import-same-as service (add-uuid)
+// import-same-as extracts the file from the `task:hasGraph/task:hasFile` relation (https://github.com/lblod/import-with-sameas-service/blob/master/lib/graph.js#L199C19-L199C82)
+export async function appendResultGraphFile(task, graphUri, logicalFile) {
+  const queryStr = `
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
+    PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    INSERT DATA {
+      GRAPH ${sparqlEscapeUri(task.graph)} {
+        ${sparqlEscapeUri(graphUri)} task:hasFile ${sparqlEscapeUri(logicalFile)} .
+      }
+    }
+  `;
+
+  await update(queryStr, {}, connectionOptions);
+}
+
+export async function ensureRemoteDataObjectWithUrl(collection, url) {
+  const rdo = await getRemoteDataObjectWithUrl(
+    collection.collection,
+    url,
+    collection.graph,
+  );
+  if (rdo) {
+    return rdo;
+  } else {
+    return await createRemoteDataObject(collection, url);
+  }
+}
+
+export async function createRemoteDataObject(collection, url) {
+  const uuid = uuidv4();
+  const uri = REMOTE_DATA_OBJECT_URI_PREFIX + uuid;
+  const created = new Date();
+
+  const query = `
+    PREFIX    adms: <http://www.w3.org/ns/adms#>
+    PREFIX    mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX    nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+    PREFIX    dct: <http://purl.org/dc/terms/>
+    PREFIX    nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+    PREFIX    nuao: <http://www.semanticdesktop.org/ontologies/2010/01/25/nuao#>
+
+    INSERT DATA {
+      GRAPH ${sparqlEscapeUri(TARGET_GRAPH)} {
+        ${sparqlEscapeUri(collection.collection)} dct:hasPart ${sparqlEscapeUri(uri)}.
+        ${sparqlEscapeUri(uri)} a nfo:RemoteDataObject .
+        ${sparqlEscapeUri(uri)}
+          mu:uuid ${sparqlEscapeString(uuid)};
+          nie:url ${sparqlEscapeUri(url)};
+          dct:created ${sparqlEscapeDateTime(created)};
+          dct:creator ${sparqlEscapeUri(OPARL_TO_ELI_SERVICE_URI)};
+          dct:modified ${sparqlEscapeDateTime(created)};
+          adms:status ${sparqlEscapeUri(FILE_STATUSES.READY)}.
+      }
+    }
+    `;
+
+  await update(query, {}, connectionOptions);
+
+  return {
+    uuid,
+    url,
+    uri,
+    status: FILE_STATUSES.READY,
+  };
 }
