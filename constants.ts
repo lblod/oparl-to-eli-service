@@ -272,8 +272,9 @@ export const SPARQL_CONSTRUCTS = [
                       eli:work_type ?paperTypeConcept ;
                       eli:is_realized_by ?mainFileExpression ;
                       eli:related_to ?auxFile ;
-                      dcterms:creator ?creator ;
-                      dcterms:contributor ?contributor .
+                      dcterms:creator ?creatorUri ;
+                      dcterms:contributor ?contributorUri ;
+                      eli:passed_by ?passedByOrgUri .
             }
             WHERE {
               ?paper a oparl:Paper ;
@@ -290,8 +291,18 @@ export const SPARQL_CONSTRUCTS = [
               OPTIONAL { ?paper oparl:auxiliaryFile ?auxFile . }
               OPTIONAL { 
                 ?paper oparl:originatorPerson|oparl:originatorOrganization ?creator .
+                BIND(IRI(?creator) as ?creatorUri)
               }
-              OPTIONAL { ?paper oparl:underDirectionOf ?contributor . }
+              OPTIONAL { 
+                ?paper oparl:underDirectionOf ?contributor .
+                BIND(IRI(?contributor) as ?contributorUri)  
+              }
+              OPTIONAL {
+                ?paper oparl:consultation ?consultation .
+                ?consultation oparl:role "beschließend" ;
+                              oparl:organization ?passedByOrg .
+                BIND(IRI(?passedByOrg) as ?passedByOrgUri)
+              }
               BIND(STRLANG(?title, "de") AS ?titleLang)
             }`,
   },
@@ -361,7 +372,7 @@ export const SPARQL_CONSTRUCTS = [
               CONSTRUCT {
                 ?consultation a eli-dl:Activity ;
                   eli-dl:based_on_a_realization_of ?paper ;
-                  eli-dl:executed ?agendaItem ;
+                  eli-dl:executed ?agendaItemUri ;
                   oparl:authoritative ?authoritative ;
                   oparl:role ?role .
               }
@@ -373,6 +384,7 @@ export const SPARQL_CONSTRUCTS = [
                         oparl:agendaItem ?agendaItem ;
                         oparl:authoritative ?authoritative ;
                         oparl:role ?role .
+                BIND(IRI(?agendaItem) as ?agendaItemUri)
               }`,
   },
   {
