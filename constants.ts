@@ -298,11 +298,19 @@ export const SPARQL_CONSTRUCTS = [
                 BIND(IRI(?contributor) as ?contributorUri)  
               }
               OPTIONAL {
-                ?paper oparl:consultation ?consultation .
-                ?consultation oparl:role "beschließend" ;
-                              oparl:organization ?passedByOrg .
+                {
+                  ?paper oparl:consultation/oparl:role "beschließend" .
+                  ?paper oparl:consultation/oparl:organization ?passedByOrg .
+                }
+                UNION {
+                  ?paper oparl:underDirectionOf ?passedByOrg .               
+                  FILTER NOT EXISTS {
+                    ?paper oparl:consultation/oparl:role "beschließend" .
+                  }
+                }
                 BIND(IRI(?passedByOrg) as ?passedByOrgUri)
               }
+
               BIND(STRLANG(?title, "de") AS ?titleLang)
             }`,
   },
