@@ -242,7 +242,9 @@ export const SPARQL_CONSTRUCTS = [
                       skos:prefLabel ?nameWithLang ;
                       org:classification ?organizationType .
 
-                ?body org:hasSubOrganization ?org .
+                ?body a org:Organization ;
+                      org:classification <http://data.vlaanderen.be/id/concept/BestuurseenheidClassificatieCode/5ab0e9b8a3b2ca7c5e000001> ;
+                      org:hasSubOrganization ?org .
 
                 ?organizationType a euvoc:CorporateBodyClassification, skos:Concept ;
                                   skos:prefLabel ?organizationTypeNameWithLang .
@@ -255,7 +257,8 @@ export const SPARQL_CONSTRUCTS = [
                         oparl:organizationType ?organizationTypeName ;
                         oparl:membership ?membership .
 
-                BIND(URI(?bodyStr) as ?body)
+                # Freiburg OParl API has a bug that /body is used instead of /body/FR in the subject page of an organization
+                BIND(IF(?bodyStr = "https://ris.freiburg.de/oparl/body", URI("https://ris.freiburg.de/oparl/body/FR"), URI(?bodyStr)) as ?body)
                 BIND(URI(CONCAT(STR('http://data.lblod.info/id/concepts/corporateBodyClassification/'), MD5(?organizationTypeName))) as ?organizationType)
                 BIND(strlang(?name, 'de') as ?nameWithLang)
                 BIND(strlang(?organizationTypeName, 'de') as ?organizationTypeNameWithLang)
