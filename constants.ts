@@ -340,9 +340,12 @@ export const SPARQL_CONSTRUCTS = [
                     oparl:name ?name ;
                     oparl:mimeType ?mimeType ;
                     oparl:size ?size ;
-                    oparl:text ?text ;
                     oparl:accessUrl ?accessUrl .
 
+                OPTIONAL {
+                  ?manifestation oparl:text ?text .
+                }
+                  
                 # Create derived IRIs and typed/language-tagged literals
                 BIND(IRI(CONCAT(STR(?manifestation), "/expression/de")) AS ?expression)
                 BIND(STRLANG(?name, "de") AS ?titleLang)
