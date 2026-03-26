@@ -84,10 +84,13 @@ export async function process(task, url, taskSpecificQueue: PQueue) {
     );
   }
 
-  // Only write ELI data if no linkToPublications were found
-  // No linkToPublications means the response is a subject page (leaf node) with ELI data and we can diff on in a next task
-  // If the page has linkToPublications, then this is a paginated page and we expect this to not be idempotent
-  if (linkToPublications.length === 0) {
+  // Only write ELI data if no linkToPublications were found that contain 'page' in the URL
+  // No linkToPublications with 'page' means the response is a subject page with ELI data and we can diff on in a next task
+  // If the page has linkToPublications with 'page', then this is a paginated collection of entities and we expect this to not be idempotent
+  const isSubjectPage =
+    linkToPublications.length === 0 ||
+    linkToPublications.filter((l) => l.includes('page')).length === 0;
+  if (isSubjectPage) {
     const fileResult = await writeFileToTriplestore(
       task.graph,
       convertedOparlData,
