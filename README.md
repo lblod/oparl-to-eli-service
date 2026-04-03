@@ -42,8 +42,16 @@ Send an HTTP POST request to `/test` to create a harvesting task on the configur
 ## Docker-compose
 Add the following snippet in your docker-compose.yml:
 
-  oparl-to-eli:
-    image: lblod/oparl-to-eli-service
+```
+oparl-to-eli:
+    image: lblod/oparl-to-eli-service:0.0.6
+    volumes:
+      - ../config/oparl-to-eli/:/config/
+      - ../data/files:/share
+    environment:
+      OPARL_ENDPOINT: 'https://ris.freiburg.de/oparl'
+      TARGET_GRAPH: 'http://mu.semte.ch/graphs/public/freiburg'
+```
 
 ## Environment variables
 
