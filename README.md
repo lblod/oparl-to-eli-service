@@ -46,7 +46,6 @@ Add the following snippet in your docker-compose.yml:
 oparl-to-eli:
     image: lblod/oparl-to-eli-service:0.0.6
     volumes:
-      - ../config/oparl-to-eli/:/config/
       - ../data/files:/share
     environment:
       OPARL_ENDPOINT: 'https://ris.freiburg.de/oparl'
