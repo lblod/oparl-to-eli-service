@@ -55,7 +55,7 @@ oparl-to-eli:
 
 ## Environment variables
 
-* `OPARL_ENDPOINT`: (string) (OPTIONAL) OParl endpoint to expose with proxy API, for example: 'https://ris.freiburg.de/oparl'
+* `OPARL_ENDPOINT`: (string) OParl endpoint to expose with proxy API, for example: 'https://ris.freiburg.de/oparl'
 * `EMBED_JSONLD_CONTEXT`: (boolean) whether the JSON-LD context should be provided inside the response or just linked. Default 'true'
 * `WRITE_TO_GRAPH`: (string) write all triples retrieved from OParl to this graph, e.g. 'http://mu.semte.ch/graphs/landing/oparl'. Default '', because all data is written to files for the add-uuid and diff service
 
